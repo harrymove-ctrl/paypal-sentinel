@@ -18,7 +18,7 @@
 | Test Harness | Verification Command | Outcome | Scope Covered |
 | :--- | :--- | :--- | :--- |
 | Rust Strict Lints | `cargo clippy --all-targets -- -D warnings` | 0 warnings | Zero unwrap calls on request paths, deterministic error types |
-| Rust Core Engine | `cargo test` | 9 of 9 passed | Spend policies, idempotency locks, Channel3 ephemeral HTTP contract, ACDC Visa 1881 capture, negative decline testing, HMAC webhook verification |
+| Rust Core Engine (`obra/superpowers` TDD) | `cargo test` | 12 of 12 passed | Spend policies, idempotency locks, Channel3 ephemeral HTTP contract, ACDC Visa 1881 capture, negative decline testing, HMAC webhook verification, Dispute Evidence Shield dossier, proportional breakdown scaling, and blocked pattern audit logging |
 | PayPal Sandbox Harness | `node scripts/verify-paypal-sandbox.mjs` | 7 of 7 passed | Token auth, Orders v2 creation and capture, Payouts v1 batch, Shipment Tracking v1, Reporting v1 31-day window, constant-time HMAC |
 | TypeScript and Build | `npm run typecheck && npm run build` | Clean | Next.js 16.4.3 production build, AG Grid v36 integration, zero type errors |
 | Playwright E2E UI/UX | `npm run test:e2e` | 6 of 6 loops passed | 13-point UI/UX QA suite, 1-Click Sandbox flow, Before and After screenshots (`docs/qa/`), and `.webm` user journey recording |

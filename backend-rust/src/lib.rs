@@ -2174,4 +2174,89 @@ mod tests {
         assert_eq!(res.execution_steps.len(), 4);
         assert_eq!(res.breakdown.len(), 3);
     }
+
+    #[tokio::test]
+    async fn test_all_12_patterns_scale_breakdown_and_log_blocked_policy_attempts() {
+        let catalog = crate::patterns::build_inspiration_catalog();
+        assert_eq!(catalog.len(), 12);
+
+        // 1. Custom amount scaling: social_impact_multi_cause default is $200.00 ($80 / $70 / $50).
+        // When executed with custom_amount_usd = $400.00 (2x), breakdown rows must scale to $160.00, $140.00, $100.00.
+        let state = AppState::new_default();
+        let scaled = crate::patterns::execute_inspiration_pattern(
+            &state,
+            crate::patterns::ExecutePatternRequest {
+                pattern_id: "social_impact_multi_cause".to_owned(),
+                custom_amount_usd: Some(400.00),
+                custom_currency: Some("USD".to_owned()),
+                custom_note: Some("Doubled neighborhood solar co-op pool".to_owned()),
+                idempotency_key: Some("test-social-scaled-400".to_owned()),
+            },
+        )
+        .await
+        .expect("scaled social impact pattern should succeed");
+
+        assert_eq!(scaled.order.amount_usd, 400.00);
+        assert_eq!(scaled.breakdown.len(), 3);
+        assert_eq!(scaled.breakdown[0].amount_display, "$160.00");
+        assert_eq!(scaled.breakdown[1].amount_display, "$140.00");
+        assert_eq!(scaled.breakdown[2].amount_display, "$100.00");
+
+        // 2. Policy guardrail rejection on pattern execution must record a BLOCKED_BY_POLICY order in ledger
+        // and transition machine_state to PolicyGuardrailCheck.
+        let blocked_err = crate::patterns::execute_inspiration_pattern(
+            &state,
+            crate::patterns::ExecutePatternRequest {
+                pattern_id: "a2a_negotiate_settle".to_owned(),
+                custom_amount_usd: Some(850.00),
+                custom_currency: Some("USD".to_owned()),
+                custom_note: Some("Attempted over-cap A2A order".to_owned()),
+                idempotency_key: Some("test-pattern-over-cap-850".to_owned()),
+            },
+        )
+        .await
+        .expect_err("over-cap pattern execution must fail policy check");
+
+        assert!(matches!(
+            blocked_err,
+            SentinelError::SingleOrderCapExceeded { .. }
+        ));
+
+        let store = state.store.read().await;
+        assert_eq!(store.machine_state, MachineState::PolicyGuardrailCheck);
+        assert_eq!(store.orders[0].status, OrderStatus::BlockedByPolicy);
+        assert_eq!(store.orders[0].amount_usd, 850.00);
+        assert_eq!(
+            store.orders[0].idempotency_key,
+            "test-pattern-over-cap-850"
+        );
+    }
+
+    #[tokio::test]
+    async fn test_dispute_shield_endpoint_generates_verifiable_mandate_dossier() {
+        let app = build_router(AppState::new_default());
+
+        let req = Request::builder()
+            .method("POST")
+            .uri("/api/orders/PAYPAL-SBX-4D90B77E22/dispute-shield")
+            .body(axum::body::Body::empty())
+            .expect("dispute shield request");
+
+        let resp = app.oneshot(req).await.expect("dispute shield response");
+        assert_eq!(resp.status(), StatusCode::OK);
+        let bytes = resp.into_body().collect().await.expect("body").to_bytes();
+        let parsed: serde_json::Value = serde_json::from_slice(&bytes).expect("json");
+
+        assert_eq!(parsed["order_id"], "PAYPAL-SBX-4D90B77E22");
+        assert_eq!(parsed["status"], "EVIDENCE_SUBMITTED_SELLER_PROTECTED");
+        assert_eq!(parsed["win_probability"], 0.96);
+        assert!(parsed["decision_hash"]
+            .as_str()
+            .map(|h| h.len() == 24)
+            .unwrap_or(false));
+        assert_eq!(
+            parsed["evidence_items"].as_array().map(|a| a.len()),
+            Some(3)
+        );
+    }
 }

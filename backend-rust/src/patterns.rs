@@ -583,7 +583,7 @@ pub async fn execute_inspiration_pattern(
         _ => 9,
     };
 
-    let (seq, idem_key, policy_snapshot, eval) = {
+    let (seq, idem_key, policy_snapshot, eval_outcome) = {
         let guard = state.store.read().await;
         let next_seq = guard.sequence + 1;
         let resolved_key = req
@@ -599,8 +599,55 @@ pub async fn execute_inspiration_pattern(
             &resolved_key,
             amount_usd,
             risk_score,
-        )?;
+        );
         (next_seq, resolved_key, guard.policy.clone(), verdict)
+    };
+
+    let eval = match eval_outcome {
+        Ok(verdict) => verdict,
+        Err(err) => {
+            if matches!(
+                err,
+                SentinelError::SingleOrderCapExceeded { .. }
+                    | SentinelError::DailyBudgetExceeded { .. }
+                    | SentinelError::MerchantRiskTooHigh { .. }
+            ) {
+                let blocked_judgment = state.typesafe.deterministic_rubric(
+                    amount_usd,
+                    &policy_snapshot,
+                    risk_score,
+                );
+                let mut store = state.store.write().await;
+                store.sequence += 1;
+                store.machine_state = MachineState::PolicyGuardrailCheck;
+                let blocked_id = format!("BLOCKED-SBX-{:04}", store.sequence);
+                store.orders.insert(
+                    0,
+                    PayPalOrderRecord {
+                        id: blocked_id,
+                        idempotency_key: idem_key,
+                        intent_prompt: format!("[{}] {}", pattern.track_title, pattern.title),
+                        mcp_tool: pattern.mcp_tool,
+                        merchant_name: pattern.track_title,
+                        merchant_email: "sandbox-settlement@paypal-ai-hackathon.example".to_owned(),
+                        item_title: format!("{} ({})", pattern.title, currency),
+                        amount_usd,
+                        currency,
+                        status: OrderStatus::BlockedByPolicy,
+                        risk_score,
+                        policy_verdict: format!("BLOCKED: {err}"),
+                        sandbox_mode: state.paypal.mode_label().to_owned(),
+                        approve_url: String::new(),
+                        created_at: "2026-11-02T19:00:00Z".to_owned(),
+                        capture_id: None,
+                        card_last4: None,
+                        decision_engine: blocked_judgment,
+                        shipment_tracking: None,
+                    },
+                );
+            }
+            return Err(err);
+        }
     };
 
     let decision = state
@@ -687,7 +734,45 @@ pub async fn execute_inspiration_pattern(
         ),
     ];
 
-    let breakdown = pattern.sample_breakdown.clone();
+    let ratio = if pattern.default_amount_usd > 0.0
+        && (amount_usd - pattern.default_amount_usd).abs() > 0.01
+    {
+        amount_usd / pattern.default_amount_usd
+    } else {
+        1.0
+    };
+
+    let breakdown = pattern
+        .sample_breakdown
+        .iter()
+        .map(|row| {
+            let scaled_display = if (ratio - 1.0).abs() > 1e-6 {
+                if let Some(stripped) = row.amount_display.strip_prefix('$') {
+                    let numeric_prefix: String = stripped
+                        .chars()
+                        .take_while(|c| c.is_ascii_digit() || *c == '.')
+                        .collect();
+                    let suffix = &stripped[numeric_prefix.len()..];
+                    if let Ok(val) = numeric_prefix.parse::<f64>() {
+                        format!("${:.2}{suffix}", val * ratio)
+                    } else {
+                        row.amount_display.clone()
+                    }
+                } else {
+                    row.amount_display.clone()
+                }
+            } else {
+                row.amount_display.clone()
+            };
+            InspirationBreakdownRow {
+                label: row.label.clone(),
+                party: row.party.clone(),
+                amount_display: scaled_display,
+                share_or_meta: row.share_or_meta.clone(),
+                status: row.status.clone(),
+            }
+        })
+        .collect();
 
     Ok(ExecutePatternResponse {
         pattern,
