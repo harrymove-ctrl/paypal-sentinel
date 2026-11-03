@@ -54,6 +54,9 @@ import {
   FoundFeedbackModal,
   FoundFloatingDock,
   FoundNonBlockingSheet,
+  type FoundReplyDraft,
+  FoundReplySheet,
+  FoundUndoToast,
 } from "./found-overlays";
 import { FoundInspirationStudio } from "./found-inspiration-studio";
 import {
@@ -632,7 +635,22 @@ export function PayPalSentinelCockpit() {
   const [sheetDocId, setSheetDocId] = useState<string | null>(null);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [activeReplyDraft, setActiveReplyDraft] =
+    useState<FoundReplyDraft | null>(null);
+  const [sentReplyIds, setSentReplyIds] = useState<string[]>([]);
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [toastUndoFn, setToastUndoFn] = useState<(() => void) | undefined>(
+    undefined,
+  );
   const frontCardRef = useRef<HTMLDivElement | null>(null);
+
+  const handleTriggerToast = useCallback(
+    (msg: string, undoFn?: () => void) => {
+      setToastMessage(msg);
+      setToastUndoFn(() => undoFn);
+    },
+    [],
+  );
 
   // Core Sentinel State (Default Light Mode #FDFDFC to match gofound.app/demo)
   const [variant, setVariant] = useState<CockpitVariant>("command");
@@ -2414,6 +2432,9 @@ export function PayPalSentinelCockpit() {
           <FoundClientsView
             onOpenSheet={(docId) => setSheetDocId(docId)}
             onNavigate={handleNavigateRoute}
+            onOpenReply={(draft) => setActiveReplyDraft(draft)}
+            onTriggerToast={handleTriggerToast}
+            sentReplyIds={sentReplyIds}
           />
         ) : null}
 
@@ -2427,22 +2448,45 @@ export function PayPalSentinelCockpit() {
             ledger={ledger}
             onOpenSheet={(docId) => setSheetDocId(docId)}
             onExportCsv={exportLedgerCsv}
+            onOpenReply={(draft) => setActiveReplyDraft(draft)}
+            onTriggerToast={handleTriggerToast}
+            sentReplyIds={sentReplyIds}
+            onQuickCaptureOrder={() =>
+              void executeAgentIntent({
+                prompt:
+                  "Quick Treasury Capture ($240 Order v2 · Visa *1881) from Money View",
+                sku: "CH3-GPU-101",
+                amount: 240,
+                directCardCapture: true,
+              })
+            }
           />
         ) : null}
 
         {/* ROUTE 4: CALENDAR AGENDA & PAPER MONTH GRID (#/calendar) */}
         {activeRoute === "calendar" ? (
-          <FoundCalendarView onOpenSheet={(docId) => setSheetDocId(docId)} />
+          <FoundCalendarView
+            onOpenSheet={(docId) => setSheetDocId(docId)}
+            onOpenReply={(draft) => setActiveReplyDraft(draft)}
+            onTriggerToast={handleTriggerToast}
+          />
         ) : null}
 
         {/* ROUTE 5: SLACK WAITING & MOODS (#/slack) */}
         {activeRoute === "slack" ? (
-          <FoundSlackView onNavigate={handleNavigateRoute} />
+          <FoundSlackView
+            onNavigate={handleNavigateRoute}
+            onOpenReply={(draft) => setActiveReplyDraft(draft)}
+            onTriggerToast={handleTriggerToast}
+          />
         ) : null}
 
         {/* ROUTE 5B: TEAM PULSE (#/team) */}
         {activeRoute === "team" ? (
-          <FoundTeamView onNavigate={handleNavigateRoute} />
+          <FoundTeamView
+            onNavigate={handleNavigateRoute}
+            onTriggerToast={handleTriggerToast}
+          />
         ) : null}
 
         {/* ROUTE 6: FIRST LOOK AUDIT & CHECK THE LIST (#/first & #/check) */}
@@ -2451,6 +2495,8 @@ export function PayPalSentinelCockpit() {
             mode={activeRoute === "check" ? "check" : "first"}
             onModeChange={(m) => setActiveRoute(m)}
             onOpenSheet={(docId) => setSheetDocId(docId)}
+            onOpenReply={(draft) => setActiveReplyDraft(draft)}
+            onTriggerToast={handleTriggerToast}
           />
         ) : null}
 
@@ -2464,6 +2510,7 @@ export function PayPalSentinelCockpit() {
             integrationStatus={integrationStatus}
             ledger={ledger}
             sdkToolCount={sdkToolCount}
+            onTriggerToast={handleTriggerToast}
           />
         ) : null}
 
@@ -2537,6 +2584,30 @@ export function PayPalSentinelCockpit() {
       <FoundFeedbackModal
         open={feedbackOpen}
         onClose={() => setFeedbackOpen(false)}
+      />
+
+      <FoundReplySheet
+        draft={activeReplyDraft}
+        onClose={() => setActiveReplyDraft(null)}
+        onSend={(draft) => {
+          setSentReplyIds((prev) =>
+            prev.includes(draft.id) ? prev : [...prev, draft.id],
+          );
+          handleTriggerToast(
+            `Dispatched PayPal Sandbox link to ${draft.recipientName} (${draft.recipientEmail})`,
+            () =>
+              setSentReplyIds((prev) => prev.filter((id) => id !== draft.id)),
+          );
+        }}
+      />
+
+      <FoundUndoToast
+        message={toastMessage}
+        onUndo={toastUndoFn}
+        onDismiss={() => {
+          setToastMessage(null);
+          setToastUndoFn(undefined);
+        }}
       />
     </div>
   );

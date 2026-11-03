@@ -7,10 +7,12 @@ import type { FoundReplyDraft } from "./found-overlays";
 
 interface FoundViewsSharedProps {
   onOpenReply?: (draft: FoundReplyDraft) => void;
-  onTriggerToast?: (msg: string) => void;
+  onTriggerToast?: (msg: string, undoFn?: () => void) => void;
   onNavigateHomeDesk?: () => void;
   onOpenSheet?: (docId: string) => void;
   onNavigate?: (route: FoundRoute) => void;
+  onQuickCaptureOrder?: () => void;
+  sentReplyIds?: string[];
   mode?: "now" | "next" | "first" | "check";
   onModeChange?: (mode: any) => void;
   ledger?: any;
@@ -547,19 +549,92 @@ const RECURRING_CHARGES = [
 export function FoundMoneyView({
   onOpenReply = () => {},
   onTriggerToast = () => {},
+  onOpenSheet = () => {},
+  onExportCsv = () => {},
+  onQuickCaptureOrder,
+  sentReplyIds = [],
+  mode: externalMode,
+  onModeChange,
+  ledger,
 }: FoundViewsSharedProps) {
-  const [subTab, setSubTab] = useState<"now" | "next">("now");
-  const [catFilter, setCatFilter] = useState<"all" | "software" | "utilities" | "other">("all");
+  const [subTab, setSubTab] = useState<"now" | "next">(
+    externalMode === "next" ? "next" : "now",
+  );
+  const [layoutMode, setLayoutMode] = useState<"split" | "editorial">("split");
+  const [catFilter, setCatFilter] = useState<
+    "all" | "software" | "utilities" | "other"
+  >("all");
+  const [duplicateCanceled, setDuplicateCanceled] = useState(false);
+  const [canceledCharges, setCanceledCharges] = useState<string[]>([]);
+  const [chasedProjects, setChasedProjects] = useState<string[]>([]);
+  const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
+
+  const switchSubTab = (next: "now" | "next") => {
+    setSubTab(next);
+    onModeChange?.(next);
+  };
 
   const filteredCharges =
     catFilter === "all"
       ? RECURRING_CHARGES
       : RECURRING_CHARGES.filter((c) => c.cat === catFilter);
 
+  const activeMonthlyRecurringTotal = RECURRING_CHARGES.reduce((sum, c) => {
+    if (canceledCharges.includes(c.name)) return sum;
+    if (duplicateCanceled && c.name === "Figma (seat 2)") return sum;
+    return sum + c.amount;
+  }, 0);
+
+  const acmeChased = sentReplyIds.includes("chase-acme");
+  const lumenChased = sentReplyIds.includes("chase-lumen");
+
   const maxRev = Math.max(...MONTHLY_REVENUE.map((m) => m.amount));
+  const dailySpent = ledger?.daily_spent_usd ?? 425;
+  const remainingBudget = ledger?.remaining_daily_budget_usd ?? 2075;
+  const dailyCap = ledger?.policy?.daily_budget_usd ?? 2500;
+  const singleCap = ledger?.policy?.max_single_order_usd ?? 500;
+  const maxRisk = ledger?.policy?.max_risk_score ?? 35;
+  const liveOrders: Array<{
+    id: string;
+    item_title: string;
+    merchant_name: string;
+    amount_usd: number;
+    status: string;
+    risk_score: number;
+    card_last4?: string | null;
+  }> = ledger?.orders ?? [];
+
+  const handleCancelDuplicateFigma = () => {
+    setDuplicateCanceled(true);
+    onTriggerToast(
+      "Canceled duplicate Figma seat & refunded $45.00 via PayPal Subscriptions API",
+      () => setDuplicateCanceled(false),
+    );
+  };
+
+  const toggleRecurringCharge = (name: string, amount: number) => {
+    if (canceledCharges.includes(name)) {
+      setCanceledCharges((prev) => prev.filter((n) => n !== name));
+      onTriggerToast(`Restored ${name} ($${amount}/mo) on PayPal Subscriptions`);
+    } else {
+      setCanceledCharges((prev) => [...prev, name]);
+      onTriggerToast(
+        `Canceled ${name} ($${amount}/mo saved via PayPal Subscriptions API)`,
+        () => setCanceledCharges((prev) => prev.filter((n) => n !== name)),
+      );
+    }
+  };
 
   return (
-    <div className="found-revwrap" data-testid="found-money-view">
+    <div
+      className="found-revwrap"
+      data-testid="found-money-view"
+      style={{
+        maxWidth: layoutMode === "split" ? 1040 : 650,
+        transition: "max-width 0.2s ease",
+      }}
+    >
+      {/* Top Header + Mode & Layout Switchers */}
       <div
         style={{
           display: "flex",
@@ -567,346 +642,692 @@ export function FoundMoneyView({
           alignItems: "flex-start",
           gap: 16,
           flexWrap: "wrap",
+          marginBottom: 16,
         }}
       >
         <div>
-          <h1 className="found-revh1">Money</h1>
-          <p className="found-slsub">
-            What came in, what went out, and every charge that repeats.
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <h1 className="found-revh1" style={{ margin: 0 }}>
+              Money
+            </h1>
+            <span
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 5,
+                padding: "2px 9px",
+                borderRadius: 999,
+                fontSize: 11.5,
+                fontWeight: 600,
+                background: "var(--ok-soft, rgba(16,185,129,0.12))",
+                color: "var(--ok, #059669)",
+              }}
+            >
+              <FoundBrandIcon name="paypal" />
+              <span>PayPal Sandbox Treasury</span>
+            </span>
+          </div>
+          <p className="found-slsub" style={{ marginTop: 4 }}>
+            What came in, what went out, and every recurring charge guarded by
+            Rust spend policies.
           </p>
         </div>
 
-        <div className="found-seg" role="tablist" aria-label="Money view">
-          <button
-            type="button"
-            role="tab"
-            aria-selected={subTab === "now"}
-            className={subTab === "now" ? "on" : ""}
-            onClick={() => setSubTab("now")}
-          >
-            Now
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={subTab === "next"}
-            className={subTab === "next" ? "on" : ""}
-            onClick={() => setSubTab("next")}
-          >
-            Who pays next
-          </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          <div className="found-seg" role="tablist" aria-label="Layout density">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={layoutMode === "split"}
+              className={layoutMode === "split" ? "on" : ""}
+              onClick={() => setLayoutMode("split")}
+              data-testid="money-layout-split"
+            >
+              2-Column Desk
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={layoutMode === "editorial"}
+              className={layoutMode === "editorial" ? "on" : ""}
+              onClick={() => setLayoutMode("editorial")}
+              data-testid="money-layout-editorial"
+            >
+              Editorial Brief
+            </button>
+          </div>
+
+          <div className="found-seg" role="tablist" aria-label="Money view">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={subTab === "now"}
+              className={subTab === "now" ? "on" : ""}
+              onClick={() => switchSubTab("now")}
+            >
+              Now
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={subTab === "next"}
+              className={subTab === "next" ? "on" : ""}
+              onClick={() => switchSubTab("next")}
+            >
+              Who pays next
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* Live PayPal Sandbox & Rust Spend Guardrail Telemetry Strip */}
+      <section
+        data-testid="money-guardrail-strip"
+        style={{
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 12,
+          padding: "10px 14px",
+          marginBottom: 20,
+          borderRadius: 12,
+          border: "1px solid var(--line)",
+          background: "var(--soft)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 14,
+            fontSize: 12,
+          }}
+        >
+          <div>
+            <span className="found-muted">Settled Today: </span>
+            <b className="found-mono" style={{ color: "var(--ok)" }}>
+              ${dailySpent.toFixed(2)}
+            </b>
+          </div>
+          <span className="found-muted" aria-hidden="true">
+            ·
+          </span>
+          <div>
+            <span className="found-muted">Daily Cap: </span>
+            <b className="found-mono">
+              ${remainingBudget.toFixed(0)} / ${dailyCap.toFixed(0)}
+            </b>
+          </div>
+          <span className="found-muted" aria-hidden="true">
+            ·
+          </span>
+          <div>
+            <span className="found-muted">Guardrail: </span>
+            <b className="found-mono">
+              &le; ${singleCap.toFixed(0)}/order · Risk &le; {maxRisk}/100
+            </b>
+          </div>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          {onQuickCaptureOrder && (
+            <button
+              type="button"
+              data-testid="money-quick-capture-btn"
+              className="found-btn found-btn-primary"
+              style={{ fontSize: 11.5, padding: "4px 10px" }}
+              onClick={() => {
+                onQuickCaptureOrder();
+                onTriggerToast(
+                  "Captured $240.00 via PayPal Orders v2 (Visa *1881)",
+                );
+              }}
+            >
+              + Capture $240 (Visa *1881)
+            </button>
+          )}
+          <button
+            type="button"
+            data-testid="money-export-csv-btn"
+            className="found-btn"
+            style={{ fontSize: 11.5, padding: "4px 10px" }}
+            onClick={() => {
+              onExportCsv();
+              onTriggerToast("Exported paypal-sentinel-ledger.csv");
+            }}
+          >
+            Export CSV
+          </button>
+        </div>
+      </section>
+
       {subTab === "now" ? (
-        <>
-          {/* 1. Money to chase */}
-          <section className="found-revsec">
-            <div className="found-revsec-h">
-              <span>Money to chase</span>
-              <span className="found-muted">$11,000 across 2 clients</span>
-            </div>
-            <div className="found-revrow">
-              <span>
-                <b>Acme Inc.</b>{" "}
-                <span className="found-muted">· #A-1042</span>
-              </span>
-              <span className="found-src2">
-                <FoundBrandIcon name="stripe" />
-                <span>Stripe · failed twice · 8d ago</span>
-              </span>
-              <b className="found-mono" style={{ color: "#D41C7A" }}>
-                $4,500
-              </b>
-              <button
-                type="button"
-                className="found-tlink"
-                onClick={() =>
-                  onOpenReply({
-                    id: "chase-acme",
-                    recipientName: "Acme Inc.",
-                    recipientEmail: "finance@acme.test",
-                    subject: "Your payment for invoice A-1042 ($4,500)",
-                    originalQuote:
-                      "Stripe charge failed twice on card ending 4242.",
-                    defaultBody:
-                      "Hi team,\n\nHeads-up that invoice #A-1042 ($4,500) failed twice on Stripe. You can settle directly via our PayPal Sandbox link below.\n\nBest,\nAlex",
-                    invoiceAmount: 4500,
-                    actionLabel: "Send PayPal link",
-                  })
-                }
-              >
-                Write
-              </button>
-            </div>
-
-            <div className="found-revrow">
-              <span>
-                <b>Sarah Lee</b>{" "}
-                <span className="found-muted">· Lumen</span>
-              </span>
-              <span className="found-src2">
-                <FoundBrandIcon name="gmail" />
-                <span>Gmail · INV-2041 · 14d overdue</span>
-              </span>
-              <b className="found-mono">$6,500</b>
-              <button
-                type="button"
-                className="found-tlink"
-                onClick={() =>
-                  onOpenReply({
-                    id: "chase-lumen",
-                    recipientName: "Sarah Lee",
-                    recipientEmail: "sarah@lumen.example",
-                    subject: "Following up on INV-2041 ($6,500)",
-                    originalQuote: "Deposit invoice attached (INV-2041.pdf).",
-                    defaultBody:
-                      "Hi Sarah,\n\nQuick nudge on deposit invoice INV-2041 ($6,500). Let me know if you need me to resend the PayPal payment link.\n\nThanks,\nAlex",
-                    invoiceAmount: 6500,
-                    actionLabel: "Chase $6,500",
-                  })
-                }
-              >
-                Chase
-              </button>
-            </div>
-          </section>
-
-          {/* 2. Paid twice */}
-          <section className="found-revsec">
-            <div className="found-revsec-h">
-              <span>Paid twice</span>
-              <span className="found-muted">
-                2 charges look like duplicates · $45/mo extra
-              </span>
-            </div>
-            <div className="found-revrow">
-              <span>
-                <b>Figma</b>
-              </span>
-              <span className="found-muted" style={{ fontSize: 12.5 }}>
-                2 charges on the 28th and 29th · $45 + $45
-              </span>
-              <b className="found-mono">$90/mo</b>
-              <button
-                type="button"
-                className="found-tlink"
-                onClick={() =>
-                  onTriggerToast("Flagged duplicate Figma seat ($45/mo) for cancellation")
-                }
-              >
-                Cancel one
-              </button>
-            </div>
-          </section>
-
-          {/* 3. This month */}
-          <section className="found-revsec">
-            <div className="found-revsec-h">
-              <span>This month</span>
-              <span className="found-src2">
-                <FoundBrandIcon name="wise" />
-                <FoundBrandIcon name="stripe" />
-                <FoundBrandIcon name="paypal" />
-                <span>from Wise, Stripe &amp; PayPal</span>
-              </span>
-            </div>
-
-            <div style={{ paddingTop: 12 }}>
-              <h2
-                style={{
-                  fontSize: 16,
-                  fontWeight: 600,
-                  margin: "0 0 2px",
-                  letterSpacing: "-0.01em",
-                }}
-              >
-                You&apos;ve kept $31,320 so far in November.
-              </h2>
-              <p className="found-slsub">
-                $48,900 came in and $17,580 went out.
-              </p>
-            </div>
-
-            <div className="found-mflow">
-              <div>
-                <span>Came in</span>
-                <b className="found-mono" style={{ color: "var(--ok)" }}>
-                  +$48,900
-                </b>
-                <span className="found-muted" style={{ fontSize: 12.5 }}>
-                  3 client payments · Wise, Stripe &amp; PayPal
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              layoutMode === "split"
+                ? "repeat(auto-fit, minmax(440px, 1fr))"
+                : "1fr",
+            gap: layoutMode === "split" ? 28 : 0,
+            alignItems: "start",
+          }}
+        >
+          {/* LEFT COLUMN: Actionable Triage (Money to chase + Duplicate Shield + Live Sandbox Orders) */}
+          <div>
+            {/* 1. Money to chase */}
+            <section className="found-revsec" style={{ marginTop: 0 }}>
+              <div className="found-revsec-h">
+                <span>Money to chase</span>
+                <span className="found-muted">
+                  $
+                  {(
+                    (acmeChased ? 0 : 4500) + (lumenChased ? 0 : 6500)
+                  ).toLocaleString()}{" "}
+                  across 2 PayPal invoices
                 </span>
               </div>
-              <div>
-                <span>Went out</span>
-                <b className="found-mono">-$17,580</b>
-                <span className="found-muted" style={{ fontSize: 12.5 }}>
-                  payroll, contractors, software, tax
-                </span>
-              </div>
-              <div>
-                <span>In the bank</span>
-                <b className="found-mono">$84,410</b>
-                <span className="found-muted" style={{ fontSize: 12.5 }}>
-                  Wise Business · updated Nov 2
-                </span>
-              </div>
-            </div>
 
-            <div style={{ marginTop: 14 }}>
-              <div
-                className="found-muted"
-                style={{ fontSize: 12, fontWeight: 500, marginBottom: 6 }}
-              >
-                Where it went
-              </div>
-              {[
-                { label: "Team & contractors", amount: "$11,700", pct: 67 },
-                { label: "Tax & government", amount: "$3,200", pct: 18 },
-                { label: "Software & tools", amount: "$1,480", pct: 9 },
-                { label: "Rent & workspace", amount: "$1,200", pct: 6 },
-              ].map((b) => (
-                <div key={b.label} className="found-mbar">
-                  <span className="found-muted">{b.label}</span>
-                  <span className="found-mbar-t">
-                    <i style={{ width: `${b.pct}%` }} />
-                  </span>
-                  <span
-                    className="found-mono"
-                    style={{ textAlign: "right", fontWeight: 500 }}
-                  >
-                    {b.amount}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* 4. Revenue 12-Month Bar Chart */}
-          <section className="found-revsec">
-            <div className="found-revsec-h">
-              <span>
-                Revenue ·{" "}
-                <span className="found-muted" style={{ fontWeight: 400 }}>
-                  $18,000/mo recurring · $18,000 this month
-                </span>
-              </span>
-              <span className="found-src2">
-                <FoundBrandIcon name="stripe" />
-                <span>Stripe</span>
-              </span>
-            </div>
-
-            <div style={{ paddingTop: 14 }}>
-              <svg
-                viewBox="0 0 600 130"
-                style={{ width: "100%", height: 120, overflow: "visible" }}
-                role="img"
-                aria-label="12 month revenue chart"
-              >
-                {MONTHLY_REVENUE.map((m, idx) => {
-                  const barW = 32;
-                  const gap = 18;
-                  const x = idx * (barW + gap) + 8;
-                  const h = Math.round((m.amount / maxRev) * 82);
-                  const y = 94 - h;
-                  const isCurrent = idx === MONTHLY_REVENUE.length - 1;
-                  return (
-                    <g key={m.month}>
-                      <rect
-                        x={x}
-                        y={y}
-                        width={barW}
-                        height={h}
-                        rx={4}
-                        fill="var(--ink)"
-                        opacity={isCurrent ? 0.92 : 0.22}
-                      />
-                      <text
-                        x={x + barW / 2}
-                        y={114}
-                        textAnchor="middle"
-                        fontSize="10.5"
-                        fill="var(--muted)"
-                      >
-                        {m.month}
-                      </text>
-                    </g>
-                  );
-                })}
-              </svg>
-            </div>
-          </section>
-
-          {/* 5. Recurring charges */}
-          <section className="found-revsec">
-            <div className="found-revsec-h">
-              <span>
-                Recurring charges ·{" "}
-                <span className="found-muted" style={{ fontWeight: 400 }}>
-                  $506/mo across {RECURRING_CHARGES.length}
-                </span>
-              </span>
-              <span className="found-muted">1 card statement</span>
-            </div>
-
-            <div className="found-ptabs" style={{ marginBottom: 4 }}>
-              {(
-                [
-                  ["all", `All ${RECURRING_CHARGES.length}`],
-                  ["software", "Software 8"],
-                  ["utilities", "Utilities 2"],
-                  ["other", "Other 2"],
-                ] as const
-              ).map(([k, label]) => (
-                <button
-                  key={k}
-                  type="button"
-                  className={catFilter === k ? "on" : ""}
-                  onClick={() => setCatFilter(k)}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-
-            {filteredCharges.map((c) => (
-              <div
-                key={c.name}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "minmax(0, 1fr) auto auto",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "9px 0",
-                  borderBottom: "1px solid var(--line)",
-                  fontSize: 13.5,
-                }}
-              >
+              <div className="found-revrow">
                 <span>
-                  <b style={{ fontWeight: 500 }}>{c.name}</b>{" "}
-                  <span className="found-muted" style={{ fontSize: 12.5 }}>
-                    · next {c.next}
-                    {c.dup ? " · duplicate seat" : ""}
+                  <b>Acme Inc.</b>{" "}
+                  <span className="found-muted">· #INV-1042</span>
+                </span>
+                <span className="found-src2">
+                  <FoundBrandIcon name="paypal" />
+                  <span>
+                    {acmeChased
+                      ? "PayPal Link Sent · awaiting card *1881"
+                      : "PayPal Subscriptions · declined twice · 8d ago"}
                   </span>
                 </span>
-                <span className="found-mono" style={{ fontWeight: 500 }}>
-                  ${c.amount.toFixed(c.amount % 1 === 0 ? 0 : 2)}/mo
-                </span>
+                <b
+                  className="found-mono"
+                  style={{ color: acmeChased ? "var(--ok)" : "#D41C7A" }}
+                >
+                  $4,500
+                </b>
                 <button
                   type="button"
-                  className="found-tlink"
+                  data-testid="money-chase-acme-btn"
+                  className={
+                    acmeChased ? "found-tlink" : "found-btn found-btn-primary"
+                  }
+                  style={
+                    acmeChased
+                      ? { color: "var(--ok)", fontWeight: 600 }
+                      : { fontSize: 11.5, padding: "4px 10px" }
+                  }
                   onClick={() =>
-                    onTriggerToast(`Opened cancellation instructions for ${c.name}`)
+                    onOpenReply({
+                      id: "chase-acme",
+                      recipientName: "Acme Inc.",
+                      recipientEmail: "finance@acme.test",
+                      subject:
+                        "PayPal Sandbox Checkout Link for Invoice #INV-1042 ($4,500)",
+                      originalQuote:
+                        "PayPal Subscriptions retry returned INSTRUMENT_DECLINED on corporate card.",
+                      defaultBody:
+                        "Hi Acme finance team,\n\nYour November retainer (#INV-1042 for $4,500.00) returned INSTRUMENT_DECLINED on the previous card. You can settle directly in one click via our PayPal Sandbox Order v2 link:\nhttps://www.sandbox.paypal.com/checkoutnow?token=INV-SBX-ACME-1042\n\nBest,\nPayPal Sentinel Treasury",
+                      invoiceAmount: 4500,
+                      actionLabel: "Send PayPal Link ($4,500)",
+                    })
                   }
                 >
-                  Cancel
+                  {acmeChased ? "✓ PayPal Link Sent" : "Send PayPal Link"}
                 </button>
               </div>
-            ))}
-          </section>
-        </>
+
+              <div className="found-revrow">
+                <span>
+                  <b>Sarah Lee</b>{" "}
+                  <span className="found-muted">· Lumen</span>
+                </span>
+                <span className="found-src2">
+                  <FoundBrandIcon name="paypal" />
+                  <span>
+                    {lumenChased
+                      ? "PayPal Invoice Reminder Sent"
+                      : "PayPal Invoicing v2 · INV-2041 · 14d overdue"}
+                  </span>
+                </span>
+                <b
+                  className="found-mono"
+                  style={{ color: lumenChased ? "var(--ok)" : undefined }}
+                >
+                  $6,500
+                </b>
+                <button
+                  type="button"
+                  data-testid="money-chase-lumen-btn"
+                  className={lumenChased ? "found-tlink" : "found-btn"}
+                  style={
+                    lumenChased
+                      ? { color: "var(--ok)", fontWeight: 600 }
+                      : { fontSize: 11.5, padding: "4px 10px" }
+                  }
+                  onClick={() =>
+                    onOpenReply({
+                      id: "chase-lumen",
+                      recipientName: "Sarah Lee",
+                      recipientEmail: "sarah@lumen.example",
+                      subject:
+                        "PayPal Invoice Reminder: INV-2041 ($6,500 · Pay Later 4x Ready)",
+                      originalQuote:
+                        "Deposit invoice INV-2041 ($6,500) issued via PayPal Invoicing v2.",
+                      defaultBody:
+                        "Hi Sarah,\n\nQuick nudge on deposit invoice INV-2041 ($6,500.00). Here is the direct PayPal Sandbox checkout link (eligible for 4x interest-free Pay Later):\nhttps://www.sandbox.paypal.com/checkoutnow?token=INV-SBX-2041\n\nThanks,\nPayPal Sentinel Treasury",
+                      invoiceAmount: 6500,
+                      actionLabel: "Chase $6,500 via PayPal",
+                    })
+                  }
+                >
+                  {lumenChased ? "✓ Reminder Sent" : "Chase $6,500"}
+                </button>
+              </div>
+            </section>
+
+            {/* 2. Paid twice · Duplicate Subscription Shield */}
+            <section className="found-revsec">
+              <div className="found-revsec-h">
+                <span>Paid twice · Duplicate Subscription Shield</span>
+                <span className="found-muted">
+                  {duplicateCanceled
+                    ? "Resolved · $45/mo saved via PayPal"
+                    : "2 charges look like duplicates · $45/mo extra"}
+                </span>
+              </div>
+              <div className="found-revrow">
+                <span>
+                  <b>Figma</b>
+                </span>
+                <span className="found-muted" style={{ fontSize: 12.5 }}>
+                  {duplicateCanceled ? (
+                    <span style={{ color: "var(--ok)", fontWeight: 500 }}>
+                      ✓ Duplicate seat canceled · $45.00 refunded via PayPal
+                      Captures v2
+                    </span>
+                  ) : (
+                    "2 charges on the 28th and 29th · $45 + $45 (PayPal Subscriptions)"
+                  )}
+                </span>
+                <b
+                  className="found-mono"
+                  style={{
+                    color: duplicateCanceled ? "var(--ok)" : undefined,
+                  }}
+                >
+                  {duplicateCanceled ? "$45/mo" : "$90/mo"}
+                </b>
+                {duplicateCanceled ? (
+                  <button
+                    type="button"
+                    className="found-tlink"
+                    onClick={() => setDuplicateCanceled(false)}
+                  >
+                    Undo
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    data-testid="money-cancel-duplicate-btn"
+                    className="found-btn"
+                    style={{ fontSize: 11.5, padding: "4px 10px" }}
+                    onClick={handleCancelDuplicateFigma}
+                  >
+                    Cancel duplicate
+                  </button>
+                )}
+              </div>
+            </section>
+
+            {/* 3. Live PayPal Sandbox Orders & Guardrail Audit (Connected to ledger.orders) */}
+            <section className="found-revsec">
+              <div className="found-revsec-h">
+                <span>Live PayPal Sandbox Orders &amp; Guardrail Log</span>
+                <span className="found-muted">
+                  {
+                    liveOrders.filter((o) => o.status !== "BLOCKED_BY_POLICY")
+                      .length
+                  }{" "}
+                  settled ·{" "}
+                  {
+                    liveOrders.filter((o) => o.status === "BLOCKED_BY_POLICY")
+                      .length
+                  }{" "}
+                  blocked ($0)
+                </span>
+              </div>
+
+              {liveOrders.slice(0, 5).map((order) => {
+                const isBlocked = order.status === "BLOCKED_BY_POLICY";
+                const isCompleted = order.status === "COMPLETED";
+                return (
+                  <div
+                    key={order.id}
+                    className="found-revrow"
+                    style={{
+                      gridTemplateColumns: "minmax(0, 1.3fr) minmax(0, 1fr) auto auto",
+                    }}
+                  >
+                    <span
+                      style={{
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      <b>{order.item_title}</b>{" "}
+                      <span className="found-muted" style={{ fontSize: 12 }}>
+                        · {order.merchant_name}
+                      </span>
+                    </span>
+                    <span style={{ fontSize: 11.5 }}>
+                      <span
+                        style={{
+                          display: "inline-block",
+                          padding: "1px 6px",
+                          borderRadius: 4,
+                          fontWeight: 600,
+                          fontSize: 10.5,
+                          background: isBlocked
+                            ? "rgba(245,158,11,0.15)"
+                            : isCompleted
+                              ? "rgba(16,185,129,0.14)"
+                              : "rgba(14,165,233,0.14)",
+                          color: isBlocked
+                            ? "#B45309"
+                            : isCompleted
+                              ? "var(--ok)"
+                              : "#0369A1",
+                        }}
+                      >
+                        {isBlocked
+                          ? `BLOCKED · Risk ${order.risk_score}`
+                          : isCompleted
+                            ? `COMPLETED${order.card_last4 ? ` · *${order.card_last4}` : ""}`
+                            : "ESCROW"}
+                      </span>
+                    </span>
+                    <b
+                      className="found-mono"
+                      style={{
+                        textDecoration: isBlocked ? "line-through" : undefined,
+                        color: isBlocked ? "var(--muted)" : "var(--ink)",
+                      }}
+                    >
+                      ${order.amount_usd.toFixed(2)}
+                    </b>
+                    <button
+                      type="button"
+                      className="found-tlink"
+                      onClick={() => onOpenSheet(order.id)}
+                    >
+                      Receipt &amp; Shield
+                    </button>
+                  </div>
+                );
+              })}
+            </section>
+          </div>
+
+          {/* RIGHT COLUMN: November Cashflow + 12-Month PayPal Revenue Chart + Recurring Subscriptions */}
+          <div>
+            {/* 4. This month */}
+            <section className="found-revsec" style={{ marginTop: 0 }}>
+              <div className="found-revsec-h">
+                <span>This month</span>
+                <span className="found-src2">
+                  <FoundBrandIcon name="paypal" />
+                  <span>PayPal Orders v2, Invoicing v2 &amp; Payouts v1</span>
+                </span>
+              </div>
+
+              <div style={{ paddingTop: 12 }}>
+                <h2
+                  style={{
+                    fontSize: 16,
+                    fontWeight: 600,
+                    margin: "0 0 2px",
+                    letterSpacing: "-0.01em",
+                  }}
+                >
+                  You&apos;ve kept $31,320 so far in November.
+                </h2>
+                <p className="found-slsub">
+                  $48,900 came in and $17,580 went out across PayPal Sandbox
+                  rails.
+                </p>
+              </div>
+
+              <div className="found-mflow">
+                <div>
+                  <span>Came in</span>
+                  <b className="found-mono" style={{ color: "var(--ok)" }}>
+                    +$48,900
+                  </b>
+                  <span className="found-muted" style={{ fontSize: 12.5 }}>
+                    3 client settlements · PayPal Orders v2 &amp; Invoicing
+                  </span>
+                </div>
+                <div>
+                  <span>Went out</span>
+                  <b className="found-mono">-$17,580</b>
+                  <span className="found-muted" style={{ fontSize: 12.5 }}>
+                    milestone payouts, compute, software, tax
+                  </span>
+                </div>
+                <div>
+                  <span>In the bank</span>
+                  <b className="found-mono">$84,410</b>
+                  <span className="found-muted" style={{ fontSize: 12.5 }}>
+                    PayPal Business Treasury · synced Nov 3
+                  </span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 14 }}>
+                <div
+                  className="found-muted"
+                  style={{ fontSize: 12, fontWeight: 500, marginBottom: 6 }}
+                >
+                  Where it went
+                </div>
+                {[
+                  { label: "Team & contractors (Payouts v1)", amount: "$11,700", pct: 67 },
+                  { label: "Tax & government", amount: "$3,200", pct: 18 },
+                  { label: "Software & AI compute", amount: "$1,480", pct: 9 },
+                  { label: "Rent & workspace", amount: "$1,200", pct: 6 },
+                ].map((b) => (
+                  <div key={b.label} className="found-mbar">
+                    <span className="found-muted">{b.label}</span>
+                    <span className="found-mbar-t">
+                      <i style={{ width: `${b.pct}%` }} />
+                    </span>
+                    <span
+                      className="found-mono"
+                      style={{ textAlign: "right", fontWeight: 500 }}
+                    >
+                      {b.amount}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            {/* 5. Revenue 12-Month Bar Chart */}
+            <section className="found-revsec">
+              <div className="found-revsec-h">
+                <span>
+                  Revenue ·{" "}
+                  <span className="found-muted" style={{ fontWeight: 400 }}>
+                    {hoveredMonth
+                      ? hoveredMonth
+                      : "$18,000/mo recurring · +36.4% YoY"}
+                  </span>
+                </span>
+                <span className="found-src2">
+                  <FoundBrandIcon name="paypal" />
+                  <span>PayPal Subscriptions v1</span>
+                </span>
+              </div>
+
+              <div style={{ paddingTop: 14 }}>
+                <svg
+                  viewBox="0 0 600 135"
+                  style={{ width: "100%", height: 128, overflow: "visible" }}
+                  role="img"
+                  aria-label="12 month PayPal revenue chart"
+                >
+                  {MONTHLY_REVENUE.map((m, idx) => {
+                    const barW = 32;
+                    const gap = 18;
+                    const x = idx * (barW + gap) + 8;
+                    const h = Math.round((m.amount / maxRev) * 78);
+                    const y = 98 - h;
+                    const isCurrent = idx === MONTHLY_REVENUE.length - 1;
+                    return (
+                      <g
+                        key={m.month}
+                        style={{ cursor: "pointer" }}
+                        onMouseEnter={() =>
+                          setHoveredMonth(
+                            `${m.month}: $${m.amount.toLocaleString()} settled via PayPal`,
+                          )
+                        }
+                        onMouseLeave={() => setHoveredMonth(null)}
+                      >
+                        {(isCurrent || idx === 0 || idx === 9) && (
+                          <text
+                            x={x + barW / 2}
+                            y={y - 6}
+                            textAnchor="middle"
+                            fontSize="9.5"
+                            fontWeight="600"
+                            fill={isCurrent ? "var(--ok)" : "var(--muted)"}
+                          >
+                            ${(m.amount / 1000).toFixed(1)}k
+                          </text>
+                        )}
+                        <rect
+                          x={x}
+                          y={y}
+                          width={barW}
+                          height={h}
+                          rx={4}
+                          fill={isCurrent ? "var(--ok)" : "var(--ink)"}
+                          opacity={isCurrent ? 0.92 : 0.25}
+                        />
+                        <text
+                          x={x + barW / 2}
+                          y={118}
+                          textAnchor="middle"
+                          fontSize="10.5"
+                          fill="var(--muted)"
+                        >
+                          {m.month}
+                        </text>
+                      </g>
+                    );
+                  })}
+                </svg>
+              </div>
+            </section>
+
+            {/* 6. Recurring charges */}
+            <section className="found-revsec">
+              <div className="found-revsec-h">
+                <span>
+                  Recurring charges ·{" "}
+                  <span className="found-muted" style={{ fontWeight: 400 }}>
+                    ${activeMonthlyRecurringTotal.toFixed(0)}/mo across{" "}
+                    {RECURRING_CHARGES.length}
+                  </span>
+                </span>
+                <span className="found-muted">
+                  PayPal Business Debit *1881
+                </span>
+              </div>
+
+              <div className="found-ptabs" style={{ marginBottom: 4 }}>
+                {(
+                  [
+                    ["all", `All ${RECURRING_CHARGES.length}`],
+                    ["software", "Software 8"],
+                    ["utilities", "Utilities 2"],
+                    ["other", "Other 2"],
+                  ] as const
+                ).map(([k, label]) => (
+                  <button
+                    key={k}
+                    type="button"
+                    className={catFilter === k ? "on" : ""}
+                    onClick={() => setCatFilter(k)}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+
+              {filteredCharges.map((c) => {
+                const isCanceled =
+                  canceledCharges.includes(c.name) ||
+                  (duplicateCanceled && c.name === "Figma (seat 2)");
+                return (
+                  <div
+                    key={c.name}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "minmax(0, 1fr) auto auto",
+                      alignItems: "center",
+                      gap: 14,
+                      padding: "9px 0",
+                      borderBottom: "1px solid var(--line)",
+                      fontSize: 13.5,
+                      opacity: isCanceled ? 0.6 : 1,
+                    }}
+                  >
+                    <span>
+                      <b
+                        style={{
+                          fontWeight: 500,
+                          textDecoration: isCanceled
+                            ? "line-through"
+                            : undefined,
+                        }}
+                      >
+                        {c.name}
+                      </b>{" "}
+                      <span className="found-muted" style={{ fontSize: 12.5 }}>
+                        {isCanceled
+                          ? "· Canceled via PayPal Subscriptions"
+                          : `· next ${c.next}${c.dup ? " · duplicate seat" : ""}`}
+                      </span>
+                    </span>
+                    <span
+                      className="found-mono"
+                      style={{
+                        fontWeight: 500,
+                        textDecoration: isCanceled ? "line-through" : undefined,
+                      }}
+                    >
+                      ${c.amount.toFixed(c.amount % 1 === 0 ? 0 : 2)}/mo
+                    </span>
+                    <button
+                      type="button"
+                      className="found-tlink"
+                      onClick={() => toggleRecurringCharge(c.name, c.amount)}
+                    >
+                      {isCanceled ? "Restore" : "Cancel"}
+                    </button>
+                  </div>
+                );
+              })}
+            </section>
+          </div>
+        </div>
       ) : (
         /* Who pays next tab (#/money/next) */
         <>
@@ -919,15 +1340,37 @@ export function FoundMoneyView({
                 </span>
               </span>
               <span className="found-src2">
-                <FoundBrandIcon name="stripe" />
-                <span>Stripe</span>
+                <FoundBrandIcon name="paypal" />
+                <span>PayPal Subscriptions v1</span>
               </span>
             </div>
             {[
-              { name: "Lumen", note: "renews Nov 1 · active", amount: "$7,500/mo", ok: true },
-              { name: "Fieldnotes", note: "renews Nov 4 · active", amount: "$6,000/mo", ok: true },
-              { name: "Acme Inc.", note: "failed twice · 8d ago", amount: "$4,500/mo", ok: false },
-              { name: "Halo", note: "paused · resumes Nov 28", amount: "$4,500/mo", ok: false },
+              {
+                name: "Lumen",
+                note: "renews Nov 1 · active on PayPal Subscriptions",
+                amount: "$7,500/mo",
+                ok: true,
+              },
+              {
+                name: "Fieldnotes",
+                note: "renews Nov 4 · active on PayPal Subscriptions",
+                amount: "$6,000/mo",
+                ok: true,
+              },
+              {
+                name: "Acme Inc.",
+                note: acmeChased
+                  ? "PayPal checkout link sent · awaiting capture"
+                  : "INSTRUMENT_DECLINED twice · 8d ago",
+                amount: "$4,500/mo",
+                ok: acmeChased,
+              },
+              {
+                name: "Halo",
+                note: "paused · resumes Nov 28",
+                amount: "$4,500/mo",
+                ok: false,
+              },
             ].map((r) => (
               <div
                 key={r.name}
@@ -958,10 +1401,10 @@ export function FoundMoneyView({
               <span>
                 Projects ·{" "}
                 <span className="found-muted" style={{ fontWeight: 400 }}>
-                  3 in flight · $46,500 left to bill
+                  3 in flight · $46,500 left to bill via PayPal Invoicing v2
                 </span>
               </span>
-              <span className="found-muted">from SOWs &amp; invoices</span>
+              <span className="found-muted">from SOWs &amp; milestones</span>
             </div>
             {[
               {
@@ -969,6 +1412,7 @@ export function FoundMoneyView({
                 project: "Brand & Web ($30,000)",
                 status: "50% deposit paid · $15,000 ready to bill",
                 amount: "$15,000",
+                rawAmount: 15000,
                 cta: "Bill $15,000",
               },
               {
@@ -976,6 +1420,7 @@ export function FoundMoneyView({
                 project: "Onboarding Prototype ($12,000)",
                 status: "Signed off yesterday · ready to invoice",
                 amount: "$12,000",
+                rawAmount: 12000,
                 cta: "Send invoice",
               },
               {
@@ -983,37 +1428,59 @@ export function FoundMoneyView({
                 project: "Print & Brand Refresh ($19,500)",
                 status: "Billed on final print delivery",
                 amount: "$19,500",
-                cta: "Check SOW",
+                rawAmount: 19500,
+                cta: "Draft invoice",
               },
-            ].map((p) => (
-              <div
-                key={p.client}
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "140px minmax(0,1fr) auto auto",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "11px 0",
-                  borderBottom: "1px solid var(--line)",
-                  fontSize: 13.5,
-                }}
-              >
-                <b>{p.client}</b>
-                <span className="found-muted" style={{ fontSize: 12.5 }}>
-                  {p.project} · {p.status}
-                </span>
-                <b className="found-mono">{p.amount}</b>
-                <button
-                  type="button"
-                  className="found-tlink"
-                  onClick={() =>
-                    onTriggerToast(`Created PayPal Sandbox invoice draft for ${p.client} (${p.amount})`)
-                  }
+            ].map((p) => {
+              const billed = chasedProjects.includes(p.client);
+              return (
+                <div
+                  key={p.client}
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "140px minmax(0,1fr) auto auto",
+                    alignItems: "center",
+                    gap: 12,
+                    padding: "11px 0",
+                    borderBottom: "1px solid var(--line)",
+                    fontSize: 13.5,
+                  }}
                 >
-                  {p.cta}
-                </button>
-              </div>
-            ))}
+                  <b>{p.client}</b>
+                  <span className="found-muted" style={{ fontSize: 12.5 }}>
+                    {p.project} ·{" "}
+                    {billed
+                      ? "✓ PayPal Sandbox Invoice dispatched"
+                      : p.status}
+                  </span>
+                  <b className="found-mono">{p.amount}</b>
+                  <button
+                    type="button"
+                    className="found-tlink"
+                    style={
+                      billed ? { color: "var(--ok)", fontWeight: 600 } : undefined
+                    }
+                    onClick={() => {
+                      setChasedProjects((prev) =>
+                        prev.includes(p.client) ? prev : [...prev, p.client],
+                      );
+                      onOpenReply({
+                        id: `project-bill-${p.client.toLowerCase()}`,
+                        recipientName: p.client,
+                        recipientEmail: `ap@${p.client.toLowerCase()}.example`,
+                        subject: `PayPal Sandbox Invoice: ${p.project} (${p.amount})`,
+                        originalQuote: p.status,
+                        defaultBody: `Hi ${p.client} team,\n\nAttached is the PayPal Sandbox Invoice (${p.amount}) for ${p.project}. You can settle immediately via PayPal Orders v2 or 4x Pay Later:\nhttps://www.sandbox.paypal.com/checkoutnow?token=INV-SBX-${p.client.toUpperCase()}\n\nBest,\nPayPal Sentinel Treasury`,
+                        invoiceAmount: p.rawAmount,
+                        actionLabel: `Send ${p.amount} PayPal Invoice`,
+                      });
+                    }}
+                  >
+                    {billed ? "✓ Invoiced" : p.cta}
+                  </button>
+                </div>
+              );
+            })}
           </section>
         </>
       )}

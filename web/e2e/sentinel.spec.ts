@@ -55,6 +55,25 @@ test("PayPal Sentinel full 6-loop and 13-point E2E verification", async ({
       name: "You've kept $31,320 so far in November.",
     }),
   ).toBeVisible();
+  await expect(page.getByTestId("money-guardrail-strip")).toBeVisible();
+  await expect(page.getByTestId("money-guardrail-strip")).toContainText(
+    "$425.00",
+  );
+
+  // Interactive Money actions: Cancel duplicate Figma charge & Chase Acme via PayPal link
+  await page.getByTestId("money-cancel-duplicate-btn").click();
+  await expect(page.getByTestId("found-money-view")).toContainText(
+    "Duplicate seat canceled",
+  );
+  await expect(page.getByTestId("found-undo-toast")).toBeVisible();
+
+  await page.getByTestId("money-chase-acme-btn").click();
+  await expect(page.getByTestId("found-reply-sheet")).toBeVisible();
+  await page.getByTestId("reply-sheet-send-btn").click();
+  await expect(page.getByTestId("found-money-view")).toContainText(
+    "PayPal Link Sent",
+  );
+
   await page.screenshot({
     path: path.join(QA_DIR, "found-money-view-1440.png"),
     fullPage: false,
