@@ -3,20 +3,29 @@
 import React, { useState } from "react";
 import { FoundBrandIcon, PixelMoodMeter } from "./found-brand-mark";
 import type { FoundRoute, FoundStyleSkin } from "./found-demo-data";
-import type { FoundReplyDraft } from "./found-overlays";
+import { FoundInspirationStudio } from "./found-inspiration-studio";
+import type { FoundReplyDraft, PayPalReceiptBreakdown } from "./found-overlays";
 
 interface FoundViewsSharedProps {
   onOpenReply?: (draft: FoundReplyDraft) => void;
   onTriggerToast?: (msg: string, undoFn?: () => void) => void;
   onNavigateHomeDesk?: () => void;
   onOpenSheet?: (docId: string) => void;
+  onOpenReceipt?: (
+    orderId: string,
+    receipt?: PayPalReceiptBreakdown,
+    order?: any,
+  ) => void;
   onNavigate?: (route: FoundRoute) => void;
   onQuickCaptureOrder?: () => void;
+  onPatternSettled?: (resp: any) => void;
   sentReplyIds?: string[];
-  mode?: "now" | "next" | "first" | "check";
+  mode?: "now" | "next" | "patterns" | "first" | "check";
   onModeChange?: (mode: any) => void;
   ledger?: any;
   onExportCsv?: () => void;
+  apiBase?: string;
+  receiptsByOrderId?: Record<string, PayPalReceiptBreakdown>;
   skin?: FoundStyleSkin;
   onChangeSkin?: (skin: FoundStyleSkin) => void;
   onSkinChange?: (skin: FoundStyleSkin) => void;
@@ -550,14 +559,18 @@ export function FoundMoneyView({
   onOpenReply = () => {},
   onTriggerToast = () => {},
   onOpenSheet = () => {},
+  onOpenReceipt,
   onExportCsv = () => {},
   onQuickCaptureOrder,
+  onPatternSettled,
   sentReplyIds = [],
   mode: externalMode,
   onModeChange,
   ledger,
+  apiBase,
+  receiptsByOrderId,
 }: FoundViewsSharedProps) {
-  const [subTab, setSubTab] = useState<"now" | "next">(
+  const [subTab, setSubTab] = useState<"now" | "next" | "patterns">(
     externalMode === "next" ? "next" : "now",
   );
   const [layoutMode, setLayoutMode] = useState<"split" | "editorial">("split");
@@ -569,7 +582,7 @@ export function FoundMoneyView({
   const [chasedProjects, setChasedProjects] = useState<string[]>([]);
   const [hoveredMonth, setHoveredMonth] = useState<string | null>(null);
 
-  const switchSubTab = (next: "now" | "next") => {
+  const switchSubTab = (next: "now" | "next" | "patterns") => {
     setSubTab(next);
     onModeChange?.(next);
   };
@@ -604,8 +617,40 @@ export function FoundMoneyView({
     card_last4?: string | null;
   }> = ledger?.orders ?? [];
 
-  const handleCancelDuplicateFigma = () => {
+  const sessionSettledOrders = liveOrders.filter(
+    (o) =>
+      o.status !== "BLOCKED_BY_POLICY" &&
+      !["PAYPAL-SBX-8F12A90C11", "PAYPAL-SBX-4D90B77E22"].includes(o.id),
+  );
+  const sessionDelta = sessionSettledOrders.reduce(
+    (sum, o) => sum + (o.amount_usd || 0),
+    0,
+  );
+  const totalCameIn = 48900 + sessionDelta;
+  const totalInBank = 84410 + sessionDelta;
+
+  const handleCancelDuplicateFigma = async () => {
     setDuplicateCanceled(true);
+    try {
+      const endpoint = apiBase || process.env.NEXT_PUBLIC_RUST_API_URL || "";
+      const res = await fetch(`${endpoint}/api/patterns/execute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          pattern_id: "consumer_budget_categorizer",
+          custom_amount_usd: 45,
+          custom_currency: "USD",
+          custom_note: "Duplicate Figma seat refund via PayPal Subscriptions API",
+          idempotency_key: `figma-refund-${Date.now()}`,
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        onPatternSettled?.(data);
+      }
+    } catch {
+      // offline fallback
+    }
     onTriggerToast(
       "Canceled duplicate Figma seat & refunded $45.00 via PayPal Subscriptions API",
       () => setDuplicateCanceled(false),
@@ -704,6 +749,7 @@ export function FoundMoneyView({
               aria-selected={subTab === "now"}
               className={subTab === "now" ? "on" : ""}
               onClick={() => switchSubTab("now")}
+              data-testid="money-tab-now"
             >
               Now
             </button>
@@ -713,8 +759,19 @@ export function FoundMoneyView({
               aria-selected={subTab === "next"}
               className={subTab === "next" ? "on" : ""}
               onClick={() => switchSubTab("next")}
+              data-testid="money-tab-next"
             >
               Who pays next
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={subTab === "patterns"}
+              className={subTab === "patterns" ? "on" : ""}
+              onClick={() => switchSubTab("patterns")}
+              data-testid="money-tab-patterns"
+            >
+              12 AI Patterns Lab
             </button>
           </div>
         </div>
@@ -803,7 +860,15 @@ export function FoundMoneyView({
         </div>
       </section>
 
-      {subTab === "now" ? (
+      {subTab === "patterns" ? (
+        <div data-testid="money-patterns-lab-container" style={{ marginTop: 8 }}>
+          <FoundInspirationStudio
+            apiBase={apiBase || process.env.NEXT_PUBLIC_RUST_API_URL || ""}
+            onPatternSettled={onPatternSettled}
+            onOpenReceipt={onOpenReceipt}
+          />
+        </div>
+      ) : subTab === "now" ? (
         <div
           style={{
             display: "grid",
@@ -1086,18 +1151,35 @@ export function FoundMoneyView({
               </div>
 
               <div style={{ paddingTop: 12 }}>
-                <h2
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    margin: "0 0 2px",
-                    letterSpacing: "-0.01em",
-                  }}
-                >
-                  You&apos;ve kept $31,320 so far in November.
-                </h2>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                  <h2
+                    style={{
+                      fontSize: 16,
+                      fontWeight: 600,
+                      margin: "0 0 2px",
+                      letterSpacing: "-0.01em",
+                    }}
+                  >
+                    You&apos;ve kept $31,320 so far in November.
+                  </h2>
+                  {sessionDelta > 0 && (
+                    <span
+                      data-testid="money-live-session-delta"
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 600,
+                        color: "var(--ok)",
+                        background: "rgba(16,185,129,0.12)",
+                        padding: "1px 7px",
+                        borderRadius: 999,
+                      }}
+                    >
+                      +${sessionDelta.toLocaleString()} live settled
+                    </span>
+                  )}
+                </div>
                 <p className="found-slsub">
-                  $48,900 came in and $17,580 went out across PayPal Sandbox
+                  ${totalCameIn.toLocaleString()} came in and $17,580 went out across PayPal Sandbox
                   rails.
                 </p>
               </div>
@@ -1106,10 +1188,10 @@ export function FoundMoneyView({
                 <div>
                   <span>Came in</span>
                   <b className="found-mono" style={{ color: "var(--ok)" }}>
-                    +$48,900
+                    +${totalCameIn.toLocaleString()}
                   </b>
                   <span className="found-muted" style={{ fontSize: 12.5 }}>
-                    3 client settlements · PayPal Orders v2 &amp; Invoicing
+                    {3 + sessionSettledOrders.length} client settlements · PayPal Orders v2 &amp; Invoicing
                   </span>
                 </div>
                 <div>
@@ -1121,9 +1203,9 @@ export function FoundMoneyView({
                 </div>
                 <div>
                   <span>In the bank</span>
-                  <b className="found-mono">$84,410</b>
+                  <b className="found-mono">${totalInBank.toLocaleString()}</b>
                   <span className="found-muted" style={{ fontSize: 12.5 }}>
-                    PayPal Business Treasury · synced Nov 3
+                    PayPal Business Treasury · live reactive
                   </span>
                 </div>
               </div>

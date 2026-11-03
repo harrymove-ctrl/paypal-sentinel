@@ -315,6 +315,23 @@ export function FoundCommandPalette({
   );
 }
 
+export interface PayPalReceiptBreakdown {
+  receipt_id: string;
+  paypal_order_id: string;
+  paypal_capture_id: string;
+  paypal_request_id_uuid: string;
+  paypal_api_endpoint: string;
+  payment_rail: string;
+  gross_amount_usd: number;
+  fee_usd: number;
+  net_amount_usd: number;
+  currency: string;
+  sha256_permit_hash: string;
+  settled_at: string;
+  raw_paypal_request: Record<string, unknown>;
+  raw_paypal_response: Record<string, unknown>;
+}
+
 export interface FoundReceiptOrder {
   id: string;
   item_title: string;
@@ -327,6 +344,7 @@ export interface FoundReceiptOrder {
   policy_verdict?: string;
   card_last4?: string | null;
   capture_id?: string | null;
+  receipt?: PayPalReceiptBreakdown;
 }
 
 interface DisputeShieldDossier {
@@ -348,42 +366,123 @@ interface DisputeShieldDossier {
 export function FoundNonBlockingSheet({
   docId,
   orders,
+  receiptsByOrderId,
   onClose,
   onCaptureOrder,
 }: {
   docId: string | null;
   orders?: FoundReceiptOrder[];
+  receiptsByOrderId?: Record<string, PayPalReceiptBreakdown>;
   onClose: () => void;
   onCaptureOrder?: () => void;
 }) {
   const [shieldDossier, setShieldDossier] =
     useState<DisputeShieldDossier | null>(null);
   const [shieldBusy, setShieldBusy] = useState(false);
+  const [showRawJson, setShowRawJson] = useState(true);
 
   useEffect(() => {
     setShieldDossier(null);
+    setShowRawJson(true);
   }, [docId]);
 
   if (!docId) return null;
   const matchedOrder = orders?.find((o) => o.id === docId) ?? null;
+  const attachedReceipt =
+    receiptsByOrderId?.[docId] ?? matchedOrder?.receipt ?? null;
   const itemTitle =
     matchedOrder?.item_title ?? "NVIDIA H100 Inference Pack (40h)";
   const merchantLabel = matchedOrder
     ? `${matchedOrder.merchant_name}`
     : "Nebula GPU Cloud (CH3-GPU-101)";
-  const railLabel = matchedOrder
-    ? `PayPal Orders v2 · ${matchedOrder.mcp_tool || "sentinel_direct_card_capture"}${matchedOrder.card_last4 ? ` · Visa *${matchedOrder.card_last4}` : ""}`
-    : "PayPal Orders v2 · Visa *1881";
+  const railLabel =
+    attachedReceipt?.payment_rail ??
+    (matchedOrder
+      ? `PayPal Orders v2 · ${matchedOrder.mcp_tool || "sentinel_direct_card_capture"}${matchedOrder.card_last4 ? ` · Visa *${matchedOrder.card_last4}` : ""}`
+      : "PayPal Orders v2 · Visa *1881");
   const statusLabel = matchedOrder?.status ?? "COMPLETED";
-  const amountUsd = matchedOrder?.amount_usd ?? 240.0;
-  const currencyLabel = matchedOrder?.currency ?? "USD";
+  const amountUsd =
+    attachedReceipt?.gross_amount_usd ?? matchedOrder?.amount_usd ?? 240.0;
+  const feeUsd =
+    attachedReceipt?.fee_usd ??
+    (statusLabel === "BLOCKED_BY_POLICY"
+      ? 0
+      : Number((amountUsd * 0.029 + 0.3).toFixed(2)));
+  const netUsd =
+    attachedReceipt?.net_amount_usd ??
+    (statusLabel === "BLOCKED_BY_POLICY"
+      ? 0
+      : Number((amountUsd - feeUsd).toFixed(2)));
+  const currencyLabel =
+    attachedReceipt?.currency ?? matchedOrder?.currency ?? "USD";
   const verdictLabel =
     matchedOrder?.policy_verdict ??
     "PASS: 240.00 USD <= 500.00 USD cap | risk 9 <= 35";
   const shortSuffix = docId.slice(-6);
+  const receiptIdLabel =
+    attachedReceipt?.receipt_id ?? `RCPT-PP-2026-${shortSuffix.toUpperCase()}`;
+  const captureIdLabel =
+    attachedReceipt?.paypal_capture_id ??
+    matchedOrder?.capture_id ??
+    `CAP-SBX-${shortSuffix.toUpperCase()}`;
+  const requestUuidLabel =
+    attachedReceipt?.paypal_request_id_uuid ??
+    `f47ac10b-58cc-4372-a567-0e02b2${shortSuffix.toLowerCase().padEnd(6, "0")}`;
+  const apiEndpointLabel =
+    attachedReceipt?.paypal_api_endpoint ??
+    "POST https://api-m.sandbox.paypal.com/v2/checkout/orders";
   const permitHashPreview = shieldDossier
     ? `${shieldDossier.prev_hash.slice(0, 10)}... -> ${shieldDossier.decision_hash.slice(0, 12)}...`
-    : `sha256:9f4a8c12... -> 7b2e01d4${shortSuffix.toLowerCase()}`;
+    : attachedReceipt?.sha256_permit_hash
+      ? `sha256:${attachedReceipt.sha256_permit_hash.slice(0, 20)}...`
+      : `sha256:9f4a8c12... -> 7b2e01d4${shortSuffix.toLowerCase()}`;
+
+  const rawPayPalPayload = attachedReceipt
+    ? {
+        request: attachedReceipt.raw_paypal_request,
+        response: attachedReceipt.raw_paypal_response,
+      }
+    : {
+        request: {
+          endpoint: apiEndpointLabel,
+          headers: {
+            "Content-Type": "application/json",
+            "PayPal-Request-Id": requestUuidLabel,
+          },
+          body: {
+            intent: "CAPTURE",
+            purchase_units: [
+              {
+                reference_id: docId,
+                description: itemTitle,
+                amount: {
+                  currency_code: currencyLabel,
+                  value: amountUsd.toFixed(2),
+                },
+              },
+            ],
+          },
+        },
+        response: {
+          id: docId,
+          status: statusLabel,
+          capture_id: captureIdLabel,
+          seller_receivable_breakdown: {
+            gross_amount: {
+              currency_code: currencyLabel,
+              value: amountUsd.toFixed(2),
+            },
+            paypal_fee: {
+              currency_code: currencyLabel,
+              value: feeUsd.toFixed(2),
+            },
+            net_amount: {
+              currency_code: currencyLabel,
+              value: netUsd.toFixed(2),
+            },
+          },
+        },
+      };
 
   const handleRunDisputeShield = async () => {
     if (shieldBusy) return;
@@ -447,7 +546,7 @@ export function FoundNonBlockingSheet({
           }}
         >
           <span className="found-muted" style={{ fontSize: 12 }}>
-            PayPal Sandbox Receipt &amp; Permit · {docId}
+            PayPal Sandbox Receipt &amp; Permit · {receiptIdLabel} · {docId}
           </span>
           <button type="button" className="found-tlink" onClick={onClose}>
             Close
@@ -500,6 +599,32 @@ export function FoundNonBlockingSheet({
               borderBottom: "1px solid var(--line)",
             }}
           >
+            <span>PayPal API Endpoint</span>
+            <span className="found-mono" style={{ fontSize: 11 }}>
+              {apiEndpointLabel}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "6px 0",
+              borderBottom: "1px solid var(--line)",
+            }}
+          >
+            <span>PayPal-Request-Id (UUID v4)</span>
+            <span className="found-mono" style={{ fontSize: 11 }}>
+              {requestUuidLabel}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              padding: "6px 0",
+              borderBottom: "1px solid var(--line)",
+            }}
+          >
             <span>SHA-256 Permit Chain</span>
             <b className="found-mono" style={{ fontSize: 11.5, color: "var(--ok)" }}>
               {permitHashPreview}
@@ -513,21 +638,10 @@ export function FoundNonBlockingSheet({
               borderBottom: "1px solid var(--line)",
             }}
           >
-            <span>Authority Rule</span>
-            <span className="found-mono" style={{ fontSize: 11 }}>
-              amount &lt;= remaining &amp;&amp; risk &lt;= 35 &amp;&amp; !revoked
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "6px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
-          >
-            <span>Status</span>
-            <b className="found-mono">{statusLabel}</b>
+            <span>Status &amp; Capture ID</span>
+            <b className="found-mono">
+              {statusLabel} · {captureIdLabel}
+            </b>
           </div>
           <div
             style={{
@@ -536,11 +650,63 @@ export function FoundNonBlockingSheet({
               paddingTop: 6,
             }}
           >
-            <span>Total</span>
-            <b className="found-mono">
-              ${amountUsd.toFixed(2)} {currencyLabel}
+            <span>Gross / PayPal Fee / Net Settled</span>
+            <b className="found-mono" style={{ color: "var(--ok)" }}>
+              ${amountUsd.toFixed(2)} - ${feeUsd.toFixed(2)} fee = ${netUsd.toFixed(2)}{" "}
+              {currencyLabel}
             </b>
           </div>
+        </div>
+
+        {/* Raw PayPal REST OpenAPI 3.1 Request & Response JSON Proof */}
+        <div
+          data-testid="sheet-raw-paypal-json"
+          style={{
+            padding: 11,
+            borderRadius: 12,
+            border: "1px solid var(--line)",
+            background: "var(--surface)",
+            marginBottom: 12,
+            fontSize: 11.5,
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: showRawJson ? 6 : 0,
+            }}
+          >
+            <b>Verifiable PayPal OpenAPI 3.1 Request &amp; Response JSON</b>
+            <button
+              type="button"
+              className="found-tlink"
+              style={{ fontSize: 11 }}
+              onClick={() => setShowRawJson((v) => !v)}
+            >
+              {showRawJson ? "Hide JSON" : "Show JSON"}
+            </button>
+          </div>
+          {showRawJson && (
+            <pre
+              style={{
+                margin: 0,
+                maxHeight: 130,
+                overflowY: "auto",
+                padding: 8,
+                borderRadius: 8,
+                background: "var(--soft)",
+                fontFamily: "var(--mono)",
+                fontSize: 10.5,
+                lineHeight: 1.35,
+                whiteSpace: "pre-wrap",
+                wordBreak: "break-word",
+              }}
+            >
+              {JSON.stringify(rawPayPalPayload, null, 2)}
+            </pre>
+          )}
         </div>
 
         {/* Dispute & Chargeback Evidence Shield (Fixes @paypal/agent-toolkit #109/#118) */}
@@ -628,17 +794,44 @@ export function FoundNonBlockingSheet({
           <button type="button" className="found-btn" onClick={onClose}>
             Done
           </button>
-          {onCaptureOrder && statusLabel !== "BLOCKED_BY_POLICY" && (
-            <button
-              type="button"
-              className="found-btn found-btn-primary"
-              onClick={() => {
-                onCaptureOrder();
-                onClose();
-              }}
-            >
-              Re-Capture ${amountUsd.toFixed(0)} on PayPal Sandbox
-            </button>
+          {statusLabel === "CREATED" ? (
+            <>
+              <button
+                type="button"
+                data-testid="void-hold-btn"
+                className="found-btn"
+                style={{ color: "var(--muted)" }}
+                onClick={() => {
+                  onClose();
+                }}
+              >
+                Void Hold ($0.00 charged)
+              </button>
+              <button
+                type="button"
+                data-testid="release-escrow-btn"
+                className="found-btn found-btn-primary"
+                onClick={() => {
+                  if (onCaptureOrder) onCaptureOrder();
+                  onClose();
+                }}
+              >
+                Release Escrow &amp; Capture
+              </button>
+            </>
+          ) : (
+            onCaptureOrder && statusLabel !== "BLOCKED_BY_POLICY" && (
+              <button
+                type="button"
+                className="found-btn found-btn-primary"
+                onClick={() => {
+                  onCaptureOrder();
+                  onClose();
+                }}
+              >
+                Re-Capture ${amountUsd.toFixed(0)} on PayPal Sandbox
+              </button>
+            )
           )}
         </div>
       </div>

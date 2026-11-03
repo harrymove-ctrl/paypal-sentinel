@@ -2259,4 +2259,44 @@ mod tests {
             Some(3)
         );
     }
+
+    #[tokio::test]
+    async fn test_execute_all_12_patterns_generates_verifiable_paypal_receipt_dossiers() {
+        let catalog = crate::patterns::build_inspiration_catalog();
+        assert_eq!(catalog.len(), 12);
+
+        for (idx, pat) in catalog.iter().enumerate() {
+            // Use fresh state per pattern so daily budget cap ($2,500) is never exhausted across all 12 runs
+            let state = AppState::new_default();
+            let res = crate::patterns::execute_inspiration_pattern(
+                &state,
+                crate::patterns::ExecutePatternRequest {
+                    pattern_id: pat.id.clone(),
+                    custom_amount_usd: Some(pat.default_amount_usd),
+                    custom_currency: Some(pat.default_currency.clone()),
+                    custom_note: Some(format!("Automated pattern #{idx} verification")),
+                    idempotency_key: Some(format!("test-all-12-{}-{idx}", pat.id)),
+                },
+            )
+            .await
+            .unwrap_or_else(|e| panic!("pattern {} failed: {e}", pat.id));
+
+            assert_eq!(res.pattern.id, pat.id);
+            assert_eq!(res.order.status, OrderStatus::Completed);
+            assert!(res.receipt.receipt_id.starts_with("RCPT-PP-"));
+            assert_eq!(res.receipt.paypal_request_id_uuid.len(), 36);
+            assert!(res
+                .receipt
+                .paypal_api_endpoint
+                .starts_with("POST https://api-m.sandbox.paypal.com/"));
+            assert!(res.receipt.sha256_permit_hash.len() >= 16);
+            assert!(res.receipt.raw_paypal_request.is_object());
+            assert!(res.receipt.raw_paypal_response.is_object());
+            assert!(
+                (res.receipt.net_amount_usd + res.receipt.fee_usd - res.receipt.gross_amount_usd)
+                    .abs()
+                    < 0.02
+            );
+        }
+    }
 }

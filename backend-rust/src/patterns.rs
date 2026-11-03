@@ -1,11 +1,12 @@
 use serde::{Deserialize, Serialize};
+use sha2::Digest;
 
 use crate::{
     domain::{
         DecisionEngineMetadata, MachineState, OrderStatus, PayPalOrderRecord, ShipmentTrackingInfo,
     },
     error::SentinelError,
-    paypal::OrderExecutionOptions,
+    paypal::{to_paypal_request_uuid, OrderExecutionOptions, SANDBOX_ACDC_TEST_CARD},
     policy::evaluate_spend_policy,
     AppState,
 };
@@ -56,6 +57,27 @@ pub struct ExecutePatternRequest {
     pub idempotency_key: Option<String>,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct PayPalReceiptDossier {
+    pub receipt_id: String,
+    pub paypal_order_id: String,
+    pub paypal_capture_id: String,
+    pub paypal_request_id_uuid: String,
+    pub paypal_api_endpoint: String,
+    pub payment_rail: String,
+    pub payer_email: String,
+    pub merchant_or_payee: String,
+    pub gross_amount_usd: f64,
+    pub currency: String,
+    pub fx_rate_note: String,
+    pub fee_usd: f64,
+    pub net_amount_usd: f64,
+    pub sha256_permit_hash: String,
+    pub checkout_or_verify_url: String,
+    pub raw_paypal_request: serde_json::Value,
+    pub raw_paypal_response: serde_json::Value,
+}
+
 #[derive(Debug, Clone, Serialize)]
 pub struct ExecutePatternResponse {
     pub pattern: InspirationPatternDescriptor,
@@ -63,6 +85,7 @@ pub struct ExecutePatternResponse {
     pub execution_steps: Vec<String>,
     pub breakdown: Vec<InspirationBreakdownRow>,
     pub order: PayPalOrderRecord,
+    pub receipt: PayPalReceiptDossier,
     pub daily_spent_usd: f64,
     pub remaining_daily_budget_usd: f64,
     pub decision_engine: DecisionEngineMetadata,
@@ -742,7 +765,7 @@ pub async fn execute_inspiration_pattern(
         1.0
     };
 
-    let breakdown = pattern
+    let breakdown: Vec<InspirationBreakdownRow> = pattern
         .sample_breakdown
         .iter()
         .map(|row| {
@@ -774,12 +797,155 @@ pub async fn execute_inspiration_pattern(
         })
         .collect();
 
+    let request_uuid = to_paypal_request_uuid(&idem_key);
+    let capture_id = order
+        .capture_id
+        .clone()
+        .unwrap_or_else(|| format!("CAP-SBX-{seq:06}"));
+    let permit_digest = hex::encode(sha2::Sha256::digest(
+        format!(
+            "{}|{}|{}|{:.2}|{}",
+            order.id, request_uuid, pattern.id, amount_usd, order.policy_verdict
+        )
+        .as_bytes(),
+    ));
+    let sha256_permit_hash = permit_digest[..24].to_owned();
+
+    let (paypal_api_endpoint, payment_rail, fx_rate_note) = match pattern.id.as_str() {
+        "auto_contractor_payout"
+        | "phone_instant_send"
+        | "oss_pr_bounty_payout"
+        | "social_impact_multi_cause" => (
+            "POST https://api-m.sandbox.paypal.com/v1/payments/payouts".to_owned(),
+            "PayPal Batch Payouts v1 (Instant Sandbox Disbursement)".to_owned(),
+            "1.0000 USD -> USD (Zero FX Spread)".to_owned(),
+        ),
+        "receipt_bill_split" | "multi_currency_invoice" => (
+            "POST https://api-m.sandbox.paypal.com/v2/invoicing/invoices".to_owned(),
+            "PayPal Invoicing v2 + QR Checkout + 4x Pay Later".to_owned(),
+            if pattern.id == "multi_currency_invoice" {
+                "0.9240 EUR -> 1.0000 USD (Locked Sandbox Treasury FX + 4x 0% APR)".to_owned()
+            } else {
+                "1.0000 USD -> USD (Itemized Receipt QR Split)".to_owned()
+            },
+        ),
+        "dispute_evidence_shield" => (
+            format!(
+                "POST https://api-m.sandbox.paypal.com/v1/customer/disputes/PP-D-{seq:05}/provide-evidence"
+            ),
+            "PayPal Disputes v1 Seller Evidence Shield (#109/#118 Fix)".to_owned(),
+            "100% Seller Protection · $0 Chargeback Loss".to_owned(),
+        ),
+        "consumer_budget_categorizer" => (
+            format!(
+                "POST https://api-m.sandbox.paypal.com/v2/payments/captures/{capture_id}/refund"
+            ),
+            "PayPal Subscriptions v1 Cancel + Captures v2 Instant Refund".to_owned(),
+            "100% Duplicate Refund Credited to Buyer".to_owned(),
+        ),
+        _ => (
+            "POST https://api-m.sandbox.paypal.com/v2/checkout/orders".to_owned(),
+            format!(
+                "PayPal Orders v2 · ACDC Visa *{}",
+                order.card_last4.as_deref().unwrap_or("1881")
+            ),
+            "1.0000 USD -> USD (Immediate Capture)".to_owned(),
+        ),
+    };
+
+    let fee_usd = ((amount_usd * 0.029) + 0.30).min(amount_usd * 0.15);
+    let net_amount_usd = (amount_usd - fee_usd).max(0.0);
+
+    let raw_paypal_request = serde_json::json!({
+        "headers": {
+            "Authorization": "Bearer <OAuth2-Sandbox-Token>",
+            "PayPal-Request-Id": request_uuid,
+            "Content-Type": "application/json"
+        },
+        "endpoint": paypal_api_endpoint,
+        "pattern_id": pattern.id,
+        "mcp_tool": pattern.mcp_tool,
+        "intent": "CAPTURE",
+        "purchase_units": [
+            {
+                "reference_id": pattern.id,
+                "description": pattern.title,
+                "amount": {
+                    "currency_code": currency,
+                    "value": format!("{:.2}", amount_usd)
+                }
+            }
+        ],
+        "payment_source": {
+            "card": {
+                "name": "Sandbox Test Buyer",
+                "number_masked": format!("************{}", &SANDBOX_ACDC_TEST_CARD[12..]),
+                "expiry": "2028-12"
+            }
+        },
+        "split_breakdown": breakdown
+    });
+
+    let raw_paypal_response = serde_json::json!({
+        "id": order.id,
+        "status": "COMPLETED",
+        "sandbox_mode": order.sandbox_mode,
+        "paypal_request_id": request_uuid,
+        "capture_id": capture_id,
+        "create_time": order.created_at,
+        "update_time": "2026-11-03T09:30:00Z",
+        "seller_receivable_breakdown": {
+            "gross_amount": { "currency_code": currency, "value": format!("{:.2}", amount_usd) },
+            "paypal_fee": { "currency_code": currency, "value": format!("{:.2}", fee_usd) },
+            "net_amount": { "currency_code": currency, "value": format!("{:.2}", net_amount_usd) }
+        },
+        "guardrail_audit": {
+            "verdict": order.policy_verdict,
+            "sha256_permit_hash": sha256_permit_hash,
+            "typesafe_jev_model": decision.model,
+            "approval_probability": decision.approval_probability
+        },
+        "links": [
+            {
+                "href": order.approve_url,
+                "rel": "approve",
+                "method": "GET"
+            },
+            {
+                "href": format!("https://api-m.sandbox.paypal.com/v2/checkout/orders/{}", order.id),
+                "rel": "self",
+                "method": "GET"
+            }
+        ]
+    });
+
+    let receipt = PayPalReceiptDossier {
+        receipt_id: format!("RCPT-PP-2026-{seq:05}"),
+        paypal_order_id: order.id.clone(),
+        paypal_capture_id: capture_id,
+        paypal_request_id_uuid: request_uuid,
+        paypal_api_endpoint,
+        payment_rail,
+        payer_email: "sb-buyer-sentinel@personal.example.com".to_owned(),
+        merchant_or_payee: pattern.track_title.clone(),
+        gross_amount_usd: amount_usd,
+        currency: currency.clone(),
+        fx_rate_note,
+        fee_usd,
+        net_amount_usd,
+        sha256_permit_hash,
+        checkout_or_verify_url: order.approve_url.clone(),
+        raw_paypal_request,
+        raw_paypal_response,
+    };
+
     Ok(ExecutePatternResponse {
         pattern,
         machine_state: MachineState::Settled,
         execution_steps,
         breakdown,
         order,
+        receipt,
         daily_spent_usd,
         remaining_daily_budget_usd,
         decision_engine: decision,

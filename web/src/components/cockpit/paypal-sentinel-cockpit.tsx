@@ -57,8 +57,12 @@ import {
   type FoundReplyDraft,
   FoundReplySheet,
   FoundUndoToast,
+  type PayPalReceiptBreakdown,
 } from "./found-overlays";
-import { FoundInspirationStudio } from "./found-inspiration-studio";
+import {
+  FoundInspirationStudio,
+  type ExecutePatternResponse,
+} from "./found-inspiration-studio";
 import {
   FoundCalendarView,
   FoundClientsView,
@@ -633,6 +637,9 @@ export function PayPalSentinelCockpit() {
   const [replyDraftText, setReplyDraftText] = useState("");
   const [fixMenuOpen, setFixMenuOpen] = useState(false);
   const [sheetDocId, setSheetDocId] = useState<string | null>(null);
+  const [receiptsByOrderId, setReceiptsByOrderId] = useState<
+    Record<string, PayPalReceiptBreakdown>
+  >({});
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [activeReplyDraft, setActiveReplyDraft] =
@@ -648,6 +655,38 @@ export function PayPalSentinelCockpit() {
     (msg: string, undoFn?: () => void) => {
       setToastMessage(msg);
       setToastUndoFn(() => undoFn);
+    },
+    [],
+  );
+
+  const handlePatternSettled = useCallback((resp: ExecutePatternResponse) => {
+    setLedger((prev) => ({
+      ...prev,
+      daily_spent_usd: resp.daily_spent_usd,
+      remaining_daily_budget_usd: resp.remaining_daily_budget_usd,
+      orders: [resp.order, ...prev.orders],
+    }));
+    if (resp.receipt) {
+      setReceiptsByOrderId((prev) => ({
+        ...prev,
+        [resp.order.id]: resp.receipt!,
+      }));
+    }
+    setReasoningLog(resp.execution_steps);
+  }, []);
+
+  const handleOpenReceiptFromAnywhere = useCallback(
+    (orderId: string, receipt?: PayPalReceiptBreakdown, order?: any) => {
+      if (receipt) {
+        setReceiptsByOrderId((prev) => ({ ...prev, [orderId]: receipt }));
+      }
+      if (order) {
+        setLedger((prev) => {
+          const exists = prev.orders.some((o) => o.id === order.id);
+          return exists ? prev : { ...prev, orders: [order, ...prev.orders] };
+        });
+      }
+      setSheetDocId(orderId);
     },
     [],
   );
@@ -2035,15 +2074,8 @@ export function PayPalSentinelCockpit() {
               {/* Official PayPal AI Hackathon 5 Inspiration Tracks & 8 Capabilities Studio */}
               <FoundInspirationStudio
                 apiBase={RUST_API_BASE}
-                onPatternSettled={(resp) => {
-                  setLedger((prev) => ({
-                    ...prev,
-                    daily_spent_usd: resp.daily_spent_usd,
-                    remaining_daily_budget_usd: resp.remaining_daily_budget_usd,
-                    orders: [resp.order, ...prev.orders],
-                  }));
-                  setReasoningLog(resp.execution_steps);
-                }}
+                onPatternSettled={handlePatternSettled}
+                onOpenReceipt={handleOpenReceiptFromAnywhere}
               />
 
               <section
@@ -2399,6 +2431,47 @@ export function PayPalSentinelCockpit() {
                           </button>
                         </div>
 
+                        {/* Upstream Patch & Safety Hints Strip (Upgrade B) */}
+                        {(() => {
+                          const currentTool = mcpTools.find(
+                            (t) => t.name === selectedMcpTool,
+                          );
+                          const isDestructive =
+                            currentTool?.rust_guardrail_enforced ?? true;
+                          const patchTag =
+                            selectedMcpTool === "sentinel_dispute_evidence_shield"
+                              ? "Patches #109 #118 (provide_evidence)"
+                              : selectedMcpTool === "sentinel_batch_payout"
+                                ? "Patches #107 (Payouts v1)"
+                                : selectedMcpTool === "sentinel_http402_paywall"
+                                  ? "CrawlerPal 1st-Place Pattern"
+                                  : selectedMcpTool === "create_order" ||
+                                      selectedMcpTool === "sentinel_direct_card_capture"
+                                    ? "Patches #95 #98 (UUID & Cap)"
+                                    : "Anthropic/OpenAI MCP Spec";
+                          return (
+                            <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[10.5px]">
+                              <span
+                                className={`rounded px-1.5 py-0.5 font-mono font-medium ${
+                                  isDestructive
+                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                                    : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
+                                }`}
+                              >
+                                {isDestructive
+                                  ? "DESTRUCTIVE · GUARDED"
+                                  : "READ ONLY AUDIT"}
+                              </span>
+                              <span className="rounded bg-[var(--soft)] px-1.5 py-0.5 font-mono text-[var(--muted)]">
+                                IDEMPOTENT UUID
+                              </span>
+                              <span className="rounded bg-sky-500/10 px-1.5 py-0.5 font-mono font-medium text-sky-700 dark:text-sky-400">
+                                {patchTag}
+                              </span>
+                            </div>
+                          );
+                        })()}
+
                         <input
                           type="hidden"
                           data-testid="mcp-args-textarea"
@@ -2446,7 +2519,11 @@ export function PayPalSentinelCockpit() {
               setActiveRoute(m === "next" ? "money-next" : "money")
             }
             ledger={ledger}
+            apiBase={RUST_API_BASE}
+            receiptsByOrderId={receiptsByOrderId}
             onOpenSheet={(docId) => setSheetDocId(docId)}
+            onOpenReceipt={handleOpenReceiptFromAnywhere}
+            onPatternSettled={handlePatternSettled}
             onExportCsv={exportLedgerCsv}
             onOpenReply={(draft) => setActiveReplyDraft(draft)}
             onTriggerToast={handleTriggerToast}
@@ -2563,6 +2640,7 @@ export function PayPalSentinelCockpit() {
       <FoundNonBlockingSheet
         docId={sheetDocId}
         orders={ledger.orders}
+        receiptsByOrderId={receiptsByOrderId}
         onClose={() => setSheetDocId(null)}
         onCaptureOrder={() =>
           void executeAgentIntent({
@@ -2593,6 +2671,29 @@ export function PayPalSentinelCockpit() {
           setSentReplyIds((prev) =>
             prev.includes(draft.id) ? prev : [...prev, draft.id],
           );
+          if (draft.invoiceAmount) {
+            void (async () => {
+              try {
+                const res = await fetch(`${RUST_API_BASE}/api/patterns/execute`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    pattern_id: "chat_request_money",
+                    custom_amount_usd: draft.invoiceAmount,
+                    custom_currency: "USD",
+                    custom_note: `Dispatched PayPal link to ${draft.recipientName} (${draft.subject})`,
+                    idempotency_key: `reply-payout-${draft.id}-${Date.now()}`,
+                  }),
+                });
+                if (res.ok) {
+                  const data = (await res.json()) as ExecutePatternResponse;
+                  handlePatternSettled(data);
+                }
+              } catch {
+                // offline fallback
+              }
+            })();
+          }
           handleTriggerToast(
             `Dispatched PayPal Sandbox link to ${draft.recipientName} (${draft.recipientEmail})`,
             () =>

@@ -74,6 +74,11 @@ test("PayPal Sentinel full 6-loop and 13-point E2E verification", async ({
     "PayPal Link Sent",
   );
 
+  // Verify 12 AI Patterns Lab tab inside Money
+  await page.getByTestId("money-tab-patterns").click();
+  await expect(page.getByTestId("money-patterns-lab-container")).toBeVisible();
+  await page.getByTestId("money-tab-now").click();
+
   await page.screenshot({
     path: path.join(QA_DIR, "found-money-view-1440.png"),
     fullPage: false,
@@ -101,6 +106,12 @@ test("PayPal Sentinel full 6-loop and 13-point E2E verification", async ({
   await page.getByTestId("inspiration-track-social_impact").click();
   await page.getByTestId("inspiration-track-ai_agents").click();
 
+  // Execute pattern and verify live PayPalReceiptDossier card
+  await page.getByTestId("execute-pattern-btn").click();
+  await expect(page.getByTestId("pattern-receipt-card")).toBeVisible();
+  await expect(page.getByTestId("pattern-receipt-card")).toContainText("RCPT-PP-");
+  await expect(page.getByTestId("pattern-receipt-card")).toContainText("Net Received:");
+
   // 2. Channel3 product discovery search -> select monitor SKU -> 1-click ACDC *1881 capture
   const searchInput = page.getByTestId("channel3-search-input");
   await searchInput.fill("monitor");
@@ -113,7 +124,7 @@ test("PayPal Sentinel full 6-loop and 13-point E2E verification", async ({
   await page.getByTestId("channel3-item-CH3-MON-415").click();
 
   await page.getByTestId("direct-card-capture-btn").click();
-  await expect(page.getByTestId("daily-spent-value")).toContainText("$870.00");
+  await expect(page.getByTestId("daily-spent-value")).toContainText("$1180.00");
 
   // 3. Adversarial Red-Team checks: Overspend ($850), INSTRUMENT_DECLINED, Duplicate Key 409, HMAC Webhook
   await page.getByTestId("simulate-overspend-btn").click();
@@ -157,6 +168,7 @@ test("PayPal Sentinel full 6-loop and 13-point E2E verification", async ({
   // Open Receipt Drawer on the first settled order and trigger Seller Chargeback & SNAD Evidence Shield
   await page.getByRole("button", { name: "Receipt", exact: true }).first().click();
   await expect(page.getByTestId("found-non-blocking-sheet")).toBeVisible();
+  await expect(page.getByTestId("sheet-raw-paypal-json")).toBeVisible();
   await expect(page.getByTestId("dispute-shield-panel")).toBeVisible();
   await page.getByTestId("submit-dispute-shield-btn").click();
   await expect(page.getByTestId("dispute-shield-result")).toContainText(
@@ -244,6 +256,40 @@ test("PayPal Sentinel full 6-loop and 13-point E2E verification", async ({
   await streakHeading.scrollIntoViewIfNeeded();
   await page.screenshot({
     path: path.join(QA_DIR, "streak-impact-cards-1440.png"),
+    fullPage: false,
+  });
+});
+
+test("PayPal Sentinel 12-pattern live execution sweep and receipt matrix", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/?debug=1");
+  await page.getByTestId("seed-sandbox-btn").click();
+
+  // Switch to Money view -> 12 AI Patterns Lab tab
+  const dock = page.getByRole("navigation", { name: "Main navigation" });
+  await dock.getByRole("button", { name: "Money" }).click();
+  await page.getByTestId("money-tab-patterns").click();
+  await expect(page.getByTestId("money-patterns-lab-container")).toBeVisible();
+
+  // Click Run All 12 Patterns auto-runner
+  await page.getByTestId("run-all-12-patterns-btn").click();
+  await expect(page.getByTestId("all-12-patterns-results-table")).toBeVisible({
+    timeout: 20000,
+  });
+  await expect(page.getByTestId("all-12-patterns-results-table")).toContainText(
+    "12 Verified",
+  );
+
+  // Switch back to Now tab and verify reactive session delta
+  await page.getByTestId("money-tab-now").click();
+  await expect(page.getByTestId("money-live-session-delta")).toBeVisible();
+
+  // Capture screenshot of live 12-pattern results
+  await page.getByTestId("money-tab-patterns").click();
+  await page.screenshot({
+    path: path.join(QA_DIR, "all-12-patterns-verified-1440.png"),
     fullPage: false,
   });
 });
