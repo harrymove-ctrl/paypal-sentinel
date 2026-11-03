@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+* {
+  font-variant-numeric: tabular-nums;
+  box-sizing: border-box;
+}

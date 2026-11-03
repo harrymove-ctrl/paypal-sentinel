@@ -1,0 +1,23 @@
+@import "./found-theme.css";
+@import "./interfere-theme.css";
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply antialiased selection:bg-emerald-500/25 selection:text-emerald-950 dark:selection:bg-emerald-400/25 dark:selection:text-emerald-100;
+  }
+}

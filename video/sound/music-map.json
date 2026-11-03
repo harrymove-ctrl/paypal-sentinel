@@ -1,0 +1,30 @@
+{
+  "note": "PayPal Sentinel (Obsidian Emerald Electro-Pulse Synth Score) at 120 BPM (1 bar = 2.0s = 60f @ 30fps). Bars are 0-indexed [fromBar, toBar].",
+  "full": {
+    "seconds": 164,
+    "sections": [
+      ["intro", 0, 4],
+      ["stabs", 4, 6],
+      ["build", 6, 12],
+      ["grooveA", 12, 26],
+      ["drop1", 26, 39],
+      ["breakdown", 39, 52],
+      ["bridge", 52, 62],
+      ["grooveB", 62, 72],
+      ["drop2", 72, 79],
+      ["silence", 79, 79.25],
+      ["outro", 79.25, 82]
+    ]
+  },
+  "x": {
+    "seconds": 44,
+    "sections": [
+      ["intro", 0, 4],
+      ["drop1", 4, 10],
+      ["breakdown", 10, 14],
+      ["grooveA", 14, 18],
+      ["drop2", 18, 20],
+      ["outro", 20, 22]
+    ]
+  }
+}

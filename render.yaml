@@ -1,0 +1,57 @@
+services:
+  - type: web
+    name: paypal-sentinel-rust-api
+    runtime: rust
+    rootDir: projects/project_1/backend-rust
+    buildCommand: cargo build --release
+    startCommand: ./target/release/paypal-sentinel-api
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 4180
+      - key: PAYPAL_ENVIRONMENT
+        value: SANDBOX
+      - key: PAYPAL_BASE_URL
+        value: https://api-m.sandbox.paypal.com
+      - key: PAYPAL_CLIENT_ID
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET
+        sync: false
+      - key: CHANNEL3_API_KEY
+        sync: false
+      - key: TYPESAFE_API_KEY
+        sync: false
+      - key: AG_STUDIO
+        sync: false
+      - key: WEBHOOK_HMAC_SECRET
+        generateValue: true
+
+  - type: web
+    name: paypal-sentinel-web-cockpit
+    runtime: node
+    rootDir: projects/project_1/web
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: PORT
+        value: 4100
+      - key: NEXT_PUBLIC_RUST_API_URL
+        fromService:
+          type: web
+          name: paypal-sentinel-rust-api
+          envVarKey: RENDER_EXTERNAL_URL
+
+  - type: worker
+    name: paypal-sentinel-settlement-workflow
+    runtime: node
+    rootDir: projects/project_1
+    buildCommand: echo "Render Workflows worker ready"
+    startCommand: node scripts/settlement-workflow-worker.mjs
+    envVars:
+      - key: WORKFLOW_INTERVAL_MS
+        value: 60000
+      - key: RUST_API_URL
+        fromService:
+          type: web
+          name: paypal-sentinel-rust-api
+          envVarKey: RENDER_EXTERNAL_URL

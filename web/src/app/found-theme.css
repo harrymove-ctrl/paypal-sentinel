@@ -1,0 +1,1753 @@
+/* ============================================================================
+   Found v5.9.0 (https://gofound.app/demo) Exact Clean Look (Benji) +
+   Interfere Design System (@interfere/design-system) Tokens
+   ============================================================================ */
+
+:root {
+  /* Crisp Tenor + Interfere Design System Palette (Light Mode) */
+  --bg: #F7F7F5;
+  --surface: #FFFFFF;
+  --soft: #F2F2EE;
+  --ink: #18181B;
+  --muted: #71717A;
+  --line: #E4E4E0;
+  --accent: #0066CC;
+  --accent-soft: #EFF6FF;
+  --warn: #B45309;
+  --ok: #15803D;
+  --ok-soft: #ECFDF5;
+  --danger: #BE123C;
+  --serif: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", system-ui, sans-serif;
+  --mono: "SF Mono", "JetBrains Mono", ui-monospace, Menlo, monospace;
+
+  /* Interfere Design System Semantic Aliases */
+  --color-page: var(--bg);
+  --color-frame: #0A0A0A;
+  --color-surface-default: var(--surface);
+  --color-surface-subtle: var(--soft);
+  --color-surface-elevated: var(--surface);
+  --color-text-default: var(--ink);
+  --color-text-subtle: var(--muted);
+  --color-text-muted: #9E9E9B;
+  --color-border-default: var(--line);
+  --color-border-subtle: var(--line);
+  --color-border-strong: #D4D4D1;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+}
+
+/* Dark theme override when user toggles dark mode */
+.found-root[data-theme="dark"] {
+  --bg: #0D0F0E;
+  --surface: #141715;
+  --soft: #1B1F1D;
+  --ink: #F2F3EE;
+  --muted: #8A8F87;
+  --line: rgba(242, 243, 238, 0.09);
+  --accent: #3B9EFF;
+  --accent-soft: rgba(59, 158, 255, 0.15);
+  --warn: #E0A34A;
+  --ok: #6FCF97;
+  --ok-soft: rgba(111, 207, 151, 0.14);
+}
+
+/* Acid-Lime skin override */
+.found-root[data-skin="lime"] {
+  --accent: #7A9A00;
+  --accent-soft: rgba(190, 242, 45, 0.22);
+}
+.found-root[data-theme="dark"][data-skin="lime"] {
+  --accent: #D6F24D;
+  --accent-soft: rgba(214, 242, 77, 0.14);
+}
+
+/* Original Warm Editorial skin override */
+.found-root[data-skin="original"] {
+  --bg: #F6F4EF;
+  --surface: #FBF9F5;
+  --soft: #EFECE5;
+  --ink: #161514;
+  --muted: #6E6A63;
+  --line: rgba(22, 21, 20, 0.08);
+  --accent: #C84B24;
+  --accent-soft: #F5E3DC;
+  --serif: "Instrument Serif", "Iowan Old Style", Georgia, serif;
+}
+
+/* Interfere Pure Monochrome skin override */
+.found-root[data-skin="interfere"] {
+  --bg: #FAFAFA;
+  --surface: #FFFFFF;
+  --soft: #F5F5F5;
+  --ink: #171717;
+  --muted: #525252;
+  --line: #E5E5E5;
+  --accent: #171717;
+  --accent-soft: #F0F0F0;
+}
+.found-root[data-theme="dark"][data-skin="interfere"] {
+  --bg: #171717;
+  --surface: #262626;
+  --soft: #1F1F1F;
+  --ink: #FAFAFA;
+  --muted: #A3A3A3;
+  --line: #2E2E2E;
+  --accent: #FAFAFA;
+  --accent-soft: #2E2E2E;
+}
+
+.found-root {
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-feature-settings: "ss01", "cv01";
+}
+
+.found-muted {
+  color: var(--muted);
+}
+
+.found-mono {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Top Bar & Sticky Navigation ---------- */
+header.found-top {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 58px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  white-space: nowrap;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+}
+
+.found-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 14px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.found-brand .found-mk {
+  width: 30px;
+  height: 30px;
+  display: block;
+  flex-shrink: 0;
+  border-radius: 8px;
+  transition: transform 0.16s ease;
+}
+
+.found-brand:hover .found-mk {
+  transform: scale(1.03);
+}
+
+/* Floating Center Demo Pill (#demobar on gofound.app/demo) */
+.found-demobar {
+  position: absolute;
+  top: 14px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 7px 6px 14px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--line), 0 8px 24px -12px rgba(0, 0, 0, 0.25);
+  font-size: 12.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.found-demobar-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-weight: 600;
+  font-size: 12px;
+  border: 0;
+  cursor: pointer;
+  transition: opacity 0.14s ease, transform 0.14s ease;
+}
+
+.found-demobar-cta:hover {
+  opacity: 0.88;
+}
+
+.found-demobar-cta:disabled {
+  opacity: 0.55;
+  cursor: wait;
+}
+
+.found-top-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.found-sync-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12.5px;
+  color: var(--muted);
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.found-sync-pill:hover {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.found-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--ok);
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.found-dot.live {
+  background: #2EB67D;
+  animation: foundPulse 1.4s ease-in-out infinite;
+}
+
+@keyframes foundPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(0.85); }
+}
+
+/* ---------- Main Page Container (Exact gofound.app/demo) ---------- */
+main.found-page {
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 8px 32px 132px;
+}
+
+/* Centered 600px / 680px single-column views */
+.found-home {
+  max-width: 600px;
+  margin: 0 auto;
+  padding-top: 2px;
+}
+
+.found-slpage,
+.found-calwrap,
+.found-revwrap,
+.found-setwrap {
+  max-width: 600px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.found-pwrap {
+  max-width: 600px;
+  margin: 0 auto;
+  transition: max-width 0.2s ease;
+}
+
+.found-pwrap.hascard {
+  max-width: 980px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 360px;
+  gap: 36px;
+  align-items: start;
+}
+
+/* ---------- Typography Headings (Exact gofound.app/demo Clean Look) ---------- */
+.found-display {
+  font-family: var(--serif);
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  line-height: 1.3;
+  margin: 0;
+  font-size: 16px;
+  color: var(--ink);
+}
+
+.found-root[data-skin="original"] .found-display {
+  font-size: clamp(28px, 3.8vw, 40px);
+  font-weight: 400;
+  line-height: 1.08;
+}
+
+.found-revh1 {
+  font-size: 20px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.found-slh {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.found-slsub {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.found-slflag {
+  color: #D41C7A;
+  font-weight: 500;
+}
+
+.found-root[data-theme="dark"] .found-slflag {
+  color: #F45CA2;
+}
+
+/* ---------- Home: Date Header + Work/Personal Switch + 7-Row Brief ---------- */
+.found-hline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+
+.found-kicker {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--muted);
+  margin: 0;
+}
+
+.found-ctxsw {
+  display: inline-flex;
+  background: var(--soft);
+  padding: 3px;
+  border-radius: 999px;
+  gap: 2px;
+}
+
+.found-ctxsw button {
+  border: 0;
+  background: none;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: color 0.14s ease, background 0.14s ease;
+}
+
+.found-ctxsw button svg {
+  width: 13px;
+  height: 13px;
+  opacity: 0.7;
+}
+
+.found-ctxsw button.on {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.found-ctxsw button.on svg {
+  opacity: 1;
+}
+
+/* 7-Row Borderless Morning Brief (Exact gofound.app/demo .brief / .bline) */
+.found-brief {
+  margin: 0 0 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.found-bline {
+  display: grid;
+  grid-template-columns: 32px 84px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 8px;
+  margin: 0 -8px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  line-height: 1.4;
+  color: var(--ink);
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  width: calc(100% + 16px);
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.14s ease;
+}
+
+.found-bline:hover {
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+.found-bi {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.found-bi svg {
+  width: 15px;
+  height: 15px;
+}
+
+.found-bk {
+  color: var(--muted);
+  font-size: 12.5px;
+  font-weight: 500;
+}
+
+.found-bv {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.found-bv b {
+  font-weight: 600;
+}
+
+.found-ba {
+  color: var(--muted);
+  opacity: 0;
+  transform: translateX(-3px);
+  transition: opacity 0.14s ease, transform 0.14s ease;
+  font-size: 13px;
+  text-align: right;
+}
+
+.found-bline:hover .found-ba {
+  opacity: 0.7;
+  transform: none;
+}
+
+.found-bwarn {
+  color: #D96B27;
+  font-weight: 500;
+}
+
+.found-bslflag {
+  color: #D41C7A;
+  font-weight: 500;
+}
+
+.found-bsetup {
+  cursor: default;
+}
+
+.found-bsetup:hover {
+  background: transparent;
+}
+
+.found-bsetup-link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line);
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.found-bsetup-link:hover {
+  text-decoration-color: var(--ink);
+}
+
+/* ---------- Home: Stacked Triage Deck (.stackwrap / .sdeck / .scard / .sacts) ---------- */
+.found-stackwrap {
+  max-width: 600px;
+  margin: 0 auto 24px;
+}
+
+.found-stackbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.found-snav {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.found-sarr {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+}
+
+.found-sarr:hover:not(:disabled) {
+  color: var(--ink);
+  background: var(--soft);
+}
+
+.found-sarr:disabled {
+  opacity: 0.28;
+  cursor: default;
+}
+
+.found-sdeck {
+  position: relative;
+  padding-bottom: 14px;
+}
+
+.found-scard {
+  position: relative;
+  z-index: 3;
+  background: color-mix(in srgb, var(--ink) 4.5%, var(--surface));
+  border-radius: 12px;
+  padding: 15px 18px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+  transition: transform 0.24s cubic-bezier(0.2, 0.9, 0.25, 1), opacity 0.18s ease;
+}
+
+.found-scard.d1,
+.found-scard.d2 {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 14px;
+  height: 52px;
+  pointer-events: none;
+  padding: 0;
+}
+
+.found-scard.d1 {
+  z-index: 2;
+  transform: translateY(7px) scale(0.972);
+  opacity: 0.65;
+}
+
+.found-scard.d2 {
+  z-index: 1;
+  transform: translateY(13px) scale(0.944);
+  opacity: 0.35;
+}
+
+.found-shead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.found-skind {
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  background: color-mix(in srgb, var(--ink) 7%, transparent);
+  color: var(--ink);
+}
+
+.found-shead-r {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.found-swhy {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.found-stitle {
+  font-family: var(--sans);
+  font-size: 15.5px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  margin: 0 0 4px;
+  color: var(--ink);
+}
+
+.found-smeta {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.found-smeta .late {
+  color: #D41C7A;
+  font-weight: 500;
+}
+
+/* External CTA buttons below .scard (Exact gofound.app/demo .sacts) */
+.found-sacts {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.found-sbtn-go {
+  border: 0;
+  background: var(--ink);
+  color: var(--bg);
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  white-space: nowrap;
+  transition: opacity 0.14s ease, transform 0.12s ease;
+}
+
+.found-sbtn-go:hover {
+  opacity: 0.9;
+}
+
+.found-ssec {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12.5px;
+  color: var(--muted);
+}
+
+.found-ssec button {
+  background: none;
+  border: 0;
+  padding: 2px 4px;
+  color: var(--muted);
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.found-ssec button:hover {
+  color: var(--ink);
+}
+
+/* ---------- Brand Marks (.bmark / .src2) ---------- */
+.found-bmark {
+  width: 15px;
+  height: 15px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: -3px;
+  flex-shrink: 0;
+}
+
+.found-bmark svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.found-bmark .bf-stripe { fill: #635BFF; }
+.found-bmark .bf-wise { fill: #25C26E; }
+.found-bmark .bf-xero { fill: #13B5EA; }
+.found-bmark .bf-shopify { fill: #95BF47; }
+
+.found-src2 {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+/* ---------- Slack & Team Page (Exact gofound.app/demo .slsec / .pmeter / .tmrow) ---------- */
+.found-slsec {
+  display: flex;
+  flex-direction: column;
+}
+
+.found-slsech {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.found-slsech .found-muted {
+  font-weight: 400;
+}
+
+.found-feelhead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: 12px 0 8px;
+  font-size: 13.5px;
+}
+
+.found-feellab {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11.5px;
+  padding: 5px 2px 6px;
+  color: var(--muted);
+}
+
+/* PixelMoodMeter: Soft gray capsule track + glossy 3D sphere (Exact gofound.app/demo) */
+.found-pmeter {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  height: 18px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+  box-sizing: border-box;
+}
+
+.found-pmeter.big {
+  display: flex;
+  width: 100%;
+  height: 34px;
+  padding: 7px 16px;
+}
+
+.found-pmx {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  gap: 2px;
+}
+
+.found-pmeter.big .found-pmx {
+  gap: 3px;
+}
+
+.found-pmx i {
+  border-radius: 1.5px;
+  background: var(--ink);
+}
+
+.found-pmx i.b1 { background: #E8288A; }
+.found-pmx i.b2 { background: #E0A34A; }
+.found-pmx i.b3 { background: #A3A39E; }
+.found-pmx i.b4 { background: #3DBF7F; }
+
+.found-pmb {
+  position: absolute;
+  top: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.28), inset 0 -2px 3px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  transition: left 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.found-pmeter.big .found-pmb {
+  width: 22px;
+  height: 22px;
+}
+
+.found-pmb.m1 {
+  background: radial-gradient(70% 60% at 32% 26%, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0) 55%), #E8288A;
+}
+.found-pmb.m2 {
+  background: radial-gradient(70% 60% at 32% 26%, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0) 55%), #E0A34A;
+}
+.found-pmb.m3 {
+  background: radial-gradient(70% 60% at 32% 26%, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0) 55%), #A3A39E;
+}
+.found-pmb.m4 {
+  background: radial-gradient(70% 60% at 32% 26%, rgba(255, 255, 255, 0.68), rgba(255, 255, 255, 0) 55%), #3DBF7F;
+}
+
+.found-feelrow {
+  display: grid;
+  grid-template-columns: 118px 112px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.found-feelrow b {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.found-feelwhy {
+  line-height: 1.4;
+}
+
+/* Underline tabs (.sltabs / .ptabs) */
+.found-sltabs,
+.found-ptabs {
+  display: flex;
+  gap: 18px;
+  border-bottom: 1px solid var(--line);
+  margin: 0;
+}
+
+.found-sltabs button,
+.found-ptabs button {
+  background: none;
+  border: 0;
+  border-bottom: 1.5px solid transparent;
+  margin-bottom: -1px;
+  padding: 8px 0;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.found-sltabs button.on,
+.found-ptabs button.on {
+  color: var(--ink);
+  font-weight: 500;
+  border-bottom-color: var(--ink);
+}
+
+.found-slgh {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.found-slgrp {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  text-align: left;
+}
+
+.found-slrow {
+  border-bottom: 1px solid var(--line);
+}
+
+.found-slline {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto auto;
+  align-items: baseline;
+  gap: 12px;
+  padding: 11px 0;
+  font-size: 13.5px;
+}
+
+.found-sldot2 {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  opacity: 0.45;
+  align-self: center;
+}
+
+.found-sldot2.k1 { background: #E8288A; opacity: 1; }
+.found-sldot2.k2 { background: var(--muted); opacity: 0.55; }
+.found-sldot2.kt { background: #2D6CDF; opacity: 1; }
+
+.found-sltxt {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  min-width: 0;
+  line-height: 1.45;
+}
+
+.found-sltxt b {
+  font-weight: 500;
+}
+
+.found-slage {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.found-slage.late {
+  color: #D41C7A;
+}
+
+.found-tlink {
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line);
+  cursor: pointer;
+}
+
+.found-tlink:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+
+/* Team View (.tdrow / .tmrow / .tmbox / .pmore) */
+.found-tdrow {
+  display: grid;
+  grid-template-columns: 8px 140px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+
+.found-tdrow:first-child {
+  border-top: 1px solid var(--line);
+}
+
+.found-tdrow b {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.found-ndot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--muted);
+  display: inline-block;
+}
+
+.found-ndot.m1 { background: #E8288A; }
+.found-ndot.m2 { background: #D9822B; }
+.found-ndot.ok { background: #2D9D6A; }
+.found-ndot.kt { background: #2D6CDF; }
+
+.found-tn-late,
+.found-tn-quiet { color: #D41C7A; }
+.found-tn-risk,
+.found-tn-slow { color: #B86E1D; }
+.found-tn-good { color: #2D9D6A; }
+
+.found-pmore > summary {
+  cursor: pointer;
+  font-size: 12.5px;
+  padding: 4px 0;
+  user-select: none;
+  color: var(--muted);
+}
+
+.found-tmrow {
+  display: grid;
+  grid-template-columns: 128px auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.found-tmrow b {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.found-tmbox {
+  display: inline-grid;
+  grid-auto-flow: column;
+  gap: 3px;
+}
+
+.found-tmbox i {
+  width: 10px;
+  height: 10px;
+  border-radius: 2.5px;
+  background: var(--soft);
+  box-shadow: inset 0 0 0 1px var(--line);
+  cursor: pointer;
+}
+
+.found-tmbox i.l1 { background: rgba(45, 157, 106, 0.25); box-shadow: none; }
+.found-tmbox i.l2 { background: rgba(45, 157, 106, 0.55); box-shadow: none; }
+.found-tmbox i.l3 { background: #2D9D6A; box-shadow: none; }
+.found-tmbox i.on { outline: 1.5px solid var(--ink); outline-offset: 1px; }
+
+.found-tmleg {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.found-tmleg .found-tmbox i {
+  width: 8px;
+  height: 8px;
+}
+
+.found-tmnote {
+  color: var(--muted);
+  text-align: right;
+  font-size: 12.5px;
+}
+
+.found-tmfoot {
+  font-size: 12px;
+  margin: 10px 0 0;
+  color: var(--muted);
+}
+
+/* ---------- Clients, Leads & Team View (.prow / .ccard2) ---------- */
+.found-plist {
+  display: flex;
+  flex-direction: column;
+}
+
+.found-prow {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  padding: 11px 8px;
+  margin: 0 -8px;
+  border-bottom: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 13.5px;
+  cursor: pointer;
+  background: transparent;
+  border-top: 0;
+  border-left: 0;
+  border-right: 0;
+  width: calc(100% + 16px);
+  text-align: left;
+  color: var(--ink);
+}
+
+.found-prow:hover,
+.found-prow.on {
+  background: color-mix(in srgb, var(--ink) 4%, transparent);
+}
+
+.found-pwho {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.found-pwho b {
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.found-pdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.found-pdot.need { background: var(--ink); }
+.found-pdot.late { background: #E8288A; }
+
+.found-pwhat {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-size: 13px;
+}
+
+.found-pwhat.late {
+  color: #D41C7A;
+}
+
+.found-pact {
+  font-size: 12.5px;
+  color: var(--ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: var(--line);
+  white-space: nowrap;
+}
+
+/* Client Side Detail Panel (.ccard2) */
+.found-ccard2 {
+  position: sticky;
+  top: 24px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  padding: 20px;
+}
+
+.found-cc2-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.found-cc2-sec {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.found-cc2-h {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+
+/* ---------- Calendar View (.calbar / .vsw / .crow / .calgrid) ---------- */
+.found-calbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.found-vsw {
+  position: relative;
+  display: inline-grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+}
+
+.found-vsw .found-vblob {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  left: 3px;
+  width: calc(50% - 3px);
+  border-radius: 999px;
+  background: var(--accent);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.found-vsw[data-mode="month"] .found-vblob {
+  transform: translateX(100%);
+}
+
+.found-vsw button {
+  position: relative;
+  z-index: 1;
+  width: 34px;
+  height: 26px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+
+.found-vsw button.on {
+  color: #FFFFFF;
+}
+
+.found-fbtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.found-cday {
+  margin-bottom: 18px;
+}
+
+.found-cday-h {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--line);
+}
+
+.found-cday.overdue .found-cday-h {
+  color: #D41C7A;
+}
+
+.found-crow {
+  display: grid;
+  grid-template-columns: 8px 86px minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+
+.found-cdot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.found-cdot.call { background: #007AFF; }
+.found-cdot.in { background: #2D9D6A; }
+.found-cdot.pay, .found-cdot.charge { background: #D9822B; }
+.found-cdot.due { background: #8B5CF6; }
+
+/* Month Calendar Grid */
+.found-calgrid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+.found-calcell {
+  min-height: 82px;
+  padding: 6px;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 11.5px;
+}
+
+/* ---------- Money View (.revsec / .mflow / .mbars / .subrow) ---------- */
+.found-seg {
+  display: inline-flex;
+  background: var(--soft);
+  padding: 3px;
+  border-radius: 999px;
+  gap: 2px;
+}
+
+.found-seg button {
+  border: 0;
+  background: none;
+  padding: 5px 14px;
+  border-radius: 999px;
+  font-family: inherit;
+  font-size: 12.5px;
+  color: var(--muted);
+  cursor: pointer;
+}
+
+.found-seg button.on {
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+
+.found-revsec {
+  display: flex;
+  flex-direction: column;
+}
+
+.found-revsec-h {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 12.5px;
+  font-weight: 600;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+  color: var(--ink);
+}
+
+.found-revsec-h .found-muted {
+  font-weight: 400;
+}
+
+.found-revrow {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.3fr) auto auto;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+
+.found-mflow {
+  border-top: 1px solid var(--line);
+  margin-top: 10px;
+}
+
+.found-mflow > div {
+  display: grid;
+  grid-template-columns: 110px 110px minmax(0, 1fr);
+  align-items: baseline;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13.5px;
+}
+
+.found-mbar {
+  display: grid;
+  grid-template-columns: 140px minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 12px;
+  padding: 6px 0;
+  font-size: 13px;
+}
+
+.found-mbar-t {
+  height: 5px;
+  border-radius: 999px;
+  background: var(--soft);
+  overflow: hidden;
+}
+
+.found-mbar-t i {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--ink);
+}
+
+/* ---------- Settings View (.setsec / .setrow) ---------- */
+.found-setsec-h {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.found-setrow {
+  border-bottom: 1px solid var(--line);
+}
+
+.found-setsum {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 155px minmax(0, 1fr) 16px;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 0;
+  background: none;
+  border: 0;
+  font-family: inherit;
+  font-size: 13.5px;
+  color: var(--ink);
+  text-align: left;
+  cursor: pointer;
+}
+
+.found-setk {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 500;
+}
+
+.found-setv {
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.found-setbody {
+  padding: 4px 0 16px 24px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* ---------- Top Inline Navigation Dock (Never Overlaps Page Content) ---------- */
+.found-dock {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--soft);
+  border: 1px solid var(--line);
+}
+
+.found-dock-item {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  color: var(--muted);
+  font-size: 12.5px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.14s ease, background 0.14s ease, box-shadow 0.14s ease;
+}
+
+.found-dock-item svg {
+  width: 15px;
+  height: 15px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.found-dock-item:hover {
+  color: var(--ink);
+  background: color-mix(in srgb, var(--ink) 5%, transparent);
+}
+
+.found-dock-item.on {
+  color: var(--ink);
+  background: var(--surface);
+  font-weight: 500;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+}
+
+.found-dock-label {
+  display: none;
+}
+
+.found-dock-item.on .found-dock-label {
+  display: inline;
+}
+
+.found-dock-badge {
+  position: absolute;
+  top: 3px;
+  right: 4px;
+  min-width: 15px;
+  height: 15px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: #D9532F;
+  color: #FFFFFF;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 15px;
+  text-align: center;
+}
+
+.found-dock-sep {
+  width: 1px;
+  height: 18px;
+  background: var(--line);
+  margin: 0 3px;
+}
+
+/* ---------- Modal / Sheet / Palette / Toast Overlays ---------- */
+.found-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  background: rgba(15, 15, 14, 0.36);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.found-modal-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 22px 24px;
+  box-shadow: 0 24px 64px -16px rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+}
+
+.found-toast {
+  position: fixed;
+  bottom: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 90;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 13px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.25);
+}
+
+.found-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 12.5px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  transition: background 0.14s ease, border-color 0.14s ease;
+}
+
+.found-btn:hover {
+  background: var(--soft);
+}
+
+.found-btn-primary {
+  background: var(--ink);
+  color: var(--bg);
+  border-color: var(--ink);
+}
+
+.found-btn-primary:hover {
+  opacity: 0.9;
+  background: var(--ink);
+}
+
+.found-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px 18px;
+}
+
+.found-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--soft);
+  color: var(--muted);
+}
+
+.found-badge.ok {
+  background: var(--ok-soft);
+  color: var(--ok);
+}
+
+.found-badge.warn {
+  background: rgba(217, 130, 43, 0.14);
+  color: var(--warn);
+}
+
+.found-badge.danger {
+  background: rgba(217, 45, 32, 0.12);
+  color: var(--danger);
+}
+
+@media (max-width: 860px) {
+  header.found-top {
+    padding: 8px 12px;
+    height: auto;
+    min-height: 46px;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 12px;
+    background: var(--bg);
+  }
+  header.found-top .found-dock {
+    order: 3;
+    width: 100%;
+    justify-content: space-between;
+  }
+  .found-top-right {
+    gap: 6px;
+  }
+  .found-sync-pill {
+    padding: 3px 6px;
+    font-size: 11.5px;
+  }
+  .found-demobar {
+    display: none;
+  }
+  main.found-page {
+    padding: 4px 14px 120px;
+  }
+  .found-hline {
+    margin: 0 0 6px;
+  }
+  .found-brief {
+    margin: 0 0 10px;
+    gap: 0;
+  }
+  .found-bline {
+    grid-template-columns: 26px 68px minmax(0, 1fr);
+    align-items: flex-start;
+    gap: 7px;
+    padding: 3.5px 6px;
+    font-size: 12px;
+  }
+  .found-bi {
+    width: 24px;
+    height: 24px;
+    border-radius: 7px;
+  }
+  .found-bk {
+    font-size: 11.5px;
+  }
+  .found-bv {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    line-height: 1.28;
+  }
+  .found-ba {
+    display: none;
+  }
+  .found-stackbar {
+    margin-bottom: 5px;
+    font-size: 11px;
+  }
+  .found-sdeck {
+    padding-bottom: 10px;
+  }
+  .found-scard {
+    padding: 11px 14px;
+  }
+  .found-shead {
+    margin-bottom: 6px;
+  }
+  .found-stitle {
+    font-size: 14px;
+    line-height: 1.28;
+  }
+  .found-smeta {
+    font-size: 12px;
+    line-height: 1.32;
+  }
+  .found-sacts {
+    margin-top: 8px;
+  }
+  .found-pwrap.hascard {
+    grid-template-columns: 1fr;
+  }
+  .found-prow {
+    grid-template-columns: 140px minmax(0, 1fr) auto;
+  }
+  .found-feelrow {
+    grid-template-columns: 100px 96px minmax(0, 1fr);
+  }
+}

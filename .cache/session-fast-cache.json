@@ -1,0 +1,1860 @@
+{
+  "generatedAt": "2026-11-02T17:33:22.241Z",
+  "scanDurationMs": 430,
+  "workspace": "/Volumes/Dev/paypal-ai-hackathon/projects/project_1",
+  "totalFiles": 24,
+  "ports": {
+    "webNext": 4100,
+    "rustAxum": 4180
+  },
+  "apiRoutes": [
+    {
+      "method": "POST / GET",
+      "route": "/api/mcp/sdk-bridge",
+      "source": "Next.js App Router",
+      "file": "web/src/app/api/mcp/sdk-bridge/route.ts"
+    },
+    {
+      "method": "GET",
+      "route": "/api/health",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/ledger",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/integrations/status",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/channel3/search",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/mcp/tools",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/mcp/invoke",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/sandbox/seed",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/agent/execute",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/orders/:id/capture",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/orders/:id/dispute",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/orders/:id/tracking",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/policy/update",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/webhooks/verify",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/webhooks/sample-signature",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "GET",
+      "route": "/api/patterns/catalog",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/api/patterns/execute",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    },
+    {
+      "method": "POST",
+      "route": "/v1/search",
+      "source": "Rust Axum API",
+      "file": "backend-rust/src/lib.rs"
+    }
+  ],
+  "referenceLibraries": [
+    {
+      "name": "Found Warm Paper Theme",
+      "domain": "gofound.app/demo",
+      "description": "Warm paper canvas #FDFDFC, tactile cards, ledger panel, and inspiration studio"
+    },
+    {
+      "name": "Interfere Design System",
+      "domain": "design.interfere.com",
+      "description": "Recessed shell frame, 13-step typography scale, and semantic CSS tokens"
+    },
+    {
+      "name": "DitherCN Shader Blocks",
+      "domain": "dithercn.dev",
+      "description": "Dither Canvas, scanline shader, and Bayer matrix effects"
+    },
+    {
+      "name": "MDXCN Interactive Docs",
+      "domain": "mdxcn.dev",
+      "description": "Interactive markdown documentation figures and code blocks"
+    },
+    {
+      "name": "Bencho Slosh Blocks",
+      "domain": "bencho.dev/blocks/slosh",
+      "description": "Fluid liquid badges, interactive progress strips, and streak components"
+    }
+  ],
+  "symbols": [
+    {
+      "name": "runtime",
+      "kind": "const",
+      "file": "web/src/app/api/mcp/sdk-bridge/route.ts",
+      "line": 4
+    },
+    {
+      "name": "GET",
+      "kind": "function",
+      "file": "web/src/app/api/mcp/sdk-bridge/route.ts",
+      "line": 6
+    },
+    {
+      "name": "metadata",
+      "kind": "const",
+      "file": "web/src/app/layout.tsx",
+      "line": 15
+    },
+    {
+      "name": "RootLayout",
+      "kind": "default_function",
+      "file": "web/src/app/layout.tsx",
+      "line": 21
+    },
+    {
+      "name": "HomePage",
+      "kind": "default_function",
+      "file": "web/src/app/page.tsx",
+      "line": 3
+    },
+    {
+      "name": "AgStudioLedgerPanel",
+      "kind": "function",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 61
+    },
+    {
+      "name": "BryntumProcurementScheduler",
+      "kind": "function",
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "line": 86
+    },
+    {
+      "name": "FoundMoodState",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 5
+    },
+    {
+      "name": "useFoundEyeTracking",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 27
+    },
+    {
+      "name": "snapAwayElement",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 40
+    },
+    {
+      "name": "FoundTiltCard",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 56
+    },
+    {
+      "name": "FoundBrandMark",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 72
+    },
+    {
+      "name": "PixelMoodMeter",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 155
+    },
+    {
+      "name": "FoundBrandName",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 236
+    },
+    {
+      "name": "FoundBrandIcon",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 255
+    },
+    {
+      "name": "FoundSourceBadge",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 474
+    },
+    {
+      "name": "FoundRoute",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 1
+    },
+    {
+      "name": "FoundStyleSkin",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 15
+    },
+    {
+      "name": "FoundTriageCard",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 17
+    },
+    {
+      "name": "FoundClientRecord",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 34
+    },
+    {
+      "name": "FoundSlackMessage",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 55
+    },
+    {
+      "name": "FoundTeamMemberPulse",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 68
+    },
+    {
+      "name": "FoundPayNextItem",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 78
+    },
+    {
+      "name": "FoundRecurringGroup",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 92
+    },
+    {
+      "name": "FoundCalendarEvent",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 105
+    },
+    {
+      "name": "FoundCheckRow",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 119
+    },
+    {
+      "name": "FoundSheetDocument",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 133
+    },
+    {
+      "name": "INITIAL_TRIAGE_CARDS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 147
+    },
+    {
+      "name": "FOUND_CLIENTS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 286
+    },
+    {
+      "name": "INITIAL_SLACK_MESSAGES",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 634
+    },
+    {
+      "name": "TEAM_PULSE_DATA",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 680
+    },
+    {
+      "name": "REVENUE_12_MONTHS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 719
+    },
+    {
+      "name": "PAY_NEXT_ITEMS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 734
+    },
+    {
+      "name": "RECURRING_GROUPS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 811
+    },
+    {
+      "name": "CALENDAR_EVENTS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 874
+    },
+    {
+      "name": "INITIAL_CHECK_ROWS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 960
+    },
+    {
+      "name": "SHEET_DOCUMENTS",
+      "kind": "const",
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "line": 1015
+    },
+    {
+      "name": "InspirationBreakdownRow",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 18
+    },
+    {
+      "name": "InspirationPatternDescriptor",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 26
+    },
+    {
+      "name": "ExecutePatternResponse",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 41
+    },
+    {
+      "name": "FoundInspirationStudio",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 433
+    },
+    {
+      "name": "FoundReplyDraft",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 9
+    },
+    {
+      "name": "FoundCommandItem",
+      "kind": "type",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 20
+    },
+    {
+      "name": "FoundCommandPalette",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 42
+    },
+    {
+      "name": "FoundNonBlockingSheet",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 318
+    },
+    {
+      "name": "FoundFeedbackModal",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 424
+    },
+    {
+      "name": "FoundReplySheet",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 498
+    },
+    {
+      "name": "FoundUndoToast",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 603
+    },
+    {
+      "name": "FoundFloatingDock",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 655
+    },
+    {
+      "name": "FoundClientsView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 233
+    },
+    {
+      "name": "FoundMoneyView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 547
+    },
+    {
+      "name": "FoundCalendarView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1027
+    },
+    {
+      "name": "FoundSlackView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1468
+    },
+    {
+      "name": "FoundTeamView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1740
+    },
+    {
+      "name": "FoundSettingsView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1916
+    },
+    {
+      "name": "FoundProjectsView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 2125
+    },
+    {
+      "name": "FoundActivityView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 2129
+    },
+    {
+      "name": "FoundFirstLookAndCheckView",
+      "kind": "function",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 2133
+    },
+    {
+      "name": "PayPalSentinelCockpit",
+      "kind": "function",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 535
+    },
+    {
+      "name": "SponsorStatusStrip",
+      "kind": "function",
+      "file": "web/src/components/cockpit/sponsor-status-strip.tsx",
+      "line": 14
+    },
+    {
+      "name": "DitherDefs",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 24
+    },
+    {
+      "name": "DitherCardProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 461
+    },
+    {
+      "name": "DitherCard",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 473
+    },
+    {
+      "name": "DitherProgressBarProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 531
+    },
+    {
+      "name": "DitherProgressBar",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 543
+    },
+    {
+      "name": "DitherGaugeProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 601
+    },
+    {
+      "name": "DitherGauge",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 612
+    },
+    {
+      "name": "DitherUptimeBarProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 675
+    },
+    {
+      "name": "DitherUptimeBar",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 687
+    },
+    {
+      "name": "DitherButtonProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 732
+    },
+    {
+      "name": "DitherButton",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 741
+    },
+    {
+      "name": "DitherStatCardProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 782
+    },
+    {
+      "name": "DitherStatCard",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 802
+    },
+    {
+      "name": "MdxcnFrameProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 911
+    },
+    {
+      "name": "MdxcnFrame",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 927
+    },
+    {
+      "name": "MdxcnTimelineProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1075
+    },
+    {
+      "name": "MdxcnTimeline",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1084
+    },
+    {
+      "name": "MdxcnWaterfallItem",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1126
+    },
+    {
+      "name": "MdxcnWaterfallProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1134
+    },
+    {
+      "name": "MdxcnWaterfall",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1143
+    },
+    {
+      "name": "MdxcnBulletProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1203
+    },
+    {
+      "name": "MdxcnBullet",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1215
+    },
+    {
+      "name": "MdxcnEndpointProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1255
+    },
+    {
+      "name": "MdxcnEndpoint",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1266
+    },
+    {
+      "name": "MdxcnInvoiceRow",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1309
+    },
+    {
+      "name": "MdxcnInvoiceProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1316
+    },
+    {
+      "name": "MdxcnInvoice",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1326
+    },
+    {
+      "name": "BenchoSloshSliderProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1383
+    },
+    {
+      "name": "BenchoSloshSlider",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1406
+    },
+    {
+      "name": "BenchoContextMeterSegment",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1671
+    },
+    {
+      "name": "BenchoContextMeterProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1678
+    },
+    {
+      "name": "BenchoContextMeter",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1689
+    },
+    {
+      "name": "BenchoRollingCounterProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1768
+    },
+    {
+      "name": "BenchoRollingCounter",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1779
+    },
+    {
+      "name": "BenchoTiltCardProps",
+      "kind": "type",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1804
+    },
+    {
+      "name": "BenchoTiltCard",
+      "kind": "function",
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "line": 1816
+    },
+    {
+      "name": "CockpitVariant",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 1
+    },
+    {
+      "name": "SentinelMachineState",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 3
+    },
+    {
+      "name": "SpendPolicy",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 13
+    },
+    {
+      "name": "Channel3Product",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 20
+    },
+    {
+      "name": "DecisionEngineMetadata",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 36
+    },
+    {
+      "name": "ShipmentTrackingInfo",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 47
+    },
+    {
+      "name": "OrderStatusValue",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 54
+    },
+    {
+      "name": "PayPalOrderRecord",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 62
+    },
+    {
+      "name": "PayoutMilestone",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 84
+    },
+    {
+      "name": "LedgerSnapshot",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 99
+    },
+    {
+      "name": "McpToolDescriptor",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 111
+    },
+    {
+      "name": "McpToolsCatalogResponse",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 121
+    },
+    {
+      "name": "IntegrationStatusEntry",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 129
+    },
+    {
+      "name": "ApimaticContractDescriptor",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 137
+    },
+    {
+      "name": "IntegrationsStatusResponse",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 145
+    },
+    {
+      "name": "Channel3SearchResponse",
+      "kind": "type",
+      "file": "web/src/components/cockpit/types.ts",
+      "line": 157
+    },
+    {
+      "name": "ProjectImpactMetric",
+      "kind": "type",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 5
+    },
+    {
+      "name": "ProjectBuildStage",
+      "kind": "type",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 11
+    },
+    {
+      "name": "ProjectDailyEntry",
+      "kind": "type",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 19
+    },
+    {
+      "name": "GitHubContributionDay",
+      "kind": "type",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 28
+    },
+    {
+      "name": "GitHubContributionProfile",
+      "kind": "type",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 34
+    },
+    {
+      "name": "SingleProjectStreakData",
+      "kind": "type",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 47
+    },
+    {
+      "name": "PROJECT_STREAK_DATA",
+      "kind": "const",
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "line": 69
+    },
+    {
+      "name": "StreakLevel",
+      "kind": "type",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 12
+    },
+    {
+      "name": "BuildCategory",
+      "kind": "type",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 13
+    },
+    {
+      "name": "StreakDayCell",
+      "kind": "type",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 15
+    },
+    {
+      "name": "StreakGridProps",
+      "kind": "type",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 27
+    },
+    {
+      "name": "buildSingleProjectStreakYear",
+      "kind": "function",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 99
+    },
+    {
+      "name": "StreakGrid",
+      "kind": "function",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 381
+    },
+    {
+      "name": "ProjectImpactStreakSectionProps",
+      "kind": "type",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 650
+    },
+    {
+      "name": "ProjectImpactStreakSection",
+      "kind": "function",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 662
+    },
+    {
+      "name": "HackathonImpactStreakSection",
+      "kind": "const",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 1062
+    },
+    {
+      "name": "cn",
+      "kind": "function",
+      "file": "web/src/lib/utils.ts",
+      "line": 4
+    },
+    {
+      "name": "MachineState",
+      "kind": "pub_enum",
+      "file": "backend-rust/src/domain.rs",
+      "line": 5
+    },
+    {
+      "name": "SpendPolicy",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 17
+    },
+    {
+      "name": "Channel3Product",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 36
+    },
+    {
+      "name": "OrderStatus",
+      "kind": "pub_enum",
+      "file": "backend-rust/src/domain.rs",
+      "line": 58
+    },
+    {
+      "name": "DecisionEngineMetadata",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 68
+    },
+    {
+      "name": "ShipmentTrackingInfo",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 80
+    },
+    {
+      "name": "PayPalOrderRecord",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 88
+    },
+    {
+      "name": "PayoutMilestone",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 114
+    },
+    {
+      "name": "AgentExecuteRequest",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 133
+    },
+    {
+      "name": "AgentExecuteResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 149
+    },
+    {
+      "name": "WebhookVerifyRequest",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 159
+    },
+    {
+      "name": "LedgerSnapshot",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 165
+    },
+    {
+      "name": "McpToolDescriptor",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 178
+    },
+    {
+      "name": "McpToolsCatalogResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 189
+    },
+    {
+      "name": "McpInvokeRequest",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 198
+    },
+    {
+      "name": "McpInvokeResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 207
+    },
+    {
+      "name": "Channel3SearchResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 217
+    },
+    {
+      "name": "AttachTrackingRequest",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 228
+    },
+    {
+      "name": "IntegrationStatusEntry",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 239
+    },
+    {
+      "name": "ApimaticContractDescriptor",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 248
+    },
+    {
+      "name": "IntegrationsStatusResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/domain.rs",
+      "line": 257
+    },
+    {
+      "name": "SentinelError",
+      "kind": "pub_enum",
+      "file": "backend-rust/src/error.rs",
+      "line": 10
+    },
+    {
+      "name": "ErrorEnvelope",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/error.rs",
+      "line": 46
+    },
+    {
+      "name": "SentinelStore",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/lib.rs",
+      "line": 31
+    },
+    {
+      "name": "AppState",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/lib.rs",
+      "line": 166
+    },
+    {
+      "name": "build_router",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/lib.rs",
+      "line": 194
+    },
+    {
+      "name": "build_mcp_tool_catalog",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/lib.rs",
+      "line": 1224
+    },
+    {
+      "name": "InspirationBreakdownRow",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 14
+    },
+    {
+      "name": "InspirationPatternDescriptor",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 23
+    },
+    {
+      "name": "InspirationCatalogResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 39
+    },
+    {
+      "name": "ExecutePatternRequest",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 47
+    },
+    {
+      "name": "ExecutePatternResponse",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 60
+    },
+    {
+      "name": "build_inspiration_catalog",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 71
+    },
+    {
+      "name": "execute_inspiration_pattern",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/patterns.rs",
+      "line": 435
+    },
+    {
+      "name": "PayPalSandboxClient",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/paypal.rs",
+      "line": 30
+    },
+    {
+      "name": "OrderExecutionOptions",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/paypal.rs",
+      "line": 127
+    },
+    {
+      "name": "CreatedPayPalOrder",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/paypal.rs",
+      "line": 137
+    },
+    {
+      "name": "to_paypal_request_uuid",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/paypal.rs",
+      "line": 146
+    },
+    {
+      "name": "Channel3ApiClient",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/paypal.rs",
+      "line": 603
+    },
+    {
+      "name": "TypeSafeDecisionClient",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/paypal.rs",
+      "line": 855
+    },
+    {
+      "name": "PolicyDecision",
+      "kind": "pub_struct",
+      "file": "backend-rust/src/policy.rs",
+      "line": 11
+    },
+    {
+      "name": "evaluate_spend_policy",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/policy.rs",
+      "line": 16
+    },
+    {
+      "name": "compute_webhook_hmac_hex",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/policy.rs",
+      "line": 74
+    },
+    {
+      "name": "verify_webhook_hmac",
+      "kind": "pub_fn",
+      "file": "backend-rust/src/policy.rs",
+      "line": 84
+    }
+  ],
+  "testIds": [
+    {
+      "testId": "ag-studio-ledger-section",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 324,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "ag-quick-filter",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 345,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "export-csv-btn",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 353,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "ag-studio-prompt-input",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 380,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "ag-studio-prompt-submit",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 393,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "studio-chip-${preset.id}",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 407,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "ag-studio-kpi-cards",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 423,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "ag-grid-container",
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "line": 487,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "bryntum-scheduler-section",
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "line": 146,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "scheduler-zoom-${level}",
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "line": 174,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "scheduler-row-${lane.ms.id}",
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "line": 216,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "track-transit-${lane.ms.id}",
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "line": 278,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "track-delivered-${lane.ms.id}",
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "line": 295,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-brand-mark",
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "line": 104,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "paypal-inspiration-studio",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 635,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "inspiration-track-${t.id}",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 654,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "inspiration-pattern-${pat.id}",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 672,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "pattern-amount-input",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 736,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "execute-pattern-btn",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 743,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "pattern-error-banner",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 755,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "pattern-execution-steps",
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "line": 765,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "found-command-palette",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 178,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "command-palette-input",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 216,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-non-blocking-sheet",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 332,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-reply-sheet",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 527,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "reply-sheet-textarea",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 555,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "reply-sheet-send-btn",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 588,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-undo-toast",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 614,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "dock-search-btn",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 817,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "dock-${item.route}-btn",
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "line": 846,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "found-clients-view",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 259,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "found-money-view",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 562,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-calendar-view",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1152,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-slack-view",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1503,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-team-view",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1750,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "found-settings-view",
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "line": 1995,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "seed-sandbox-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1165,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "rust-api-badge",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1176,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "toggle-debug",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1200,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "qa-debug-bar",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1214,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "variant-${item.id}",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1258,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "qa-replay-duplicate",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1277,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "qa-verify-webhook",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1292,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "qa-stress-long",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1300,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "guardrail-alert",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1326,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "hackathon-problem-brief",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1409,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "paypal-inspiration-studio",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1443,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "channel3-search-input",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1891,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "channel3-search-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1904,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "channel3-item-${item.sku}",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1918,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "direct-card-capture-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1949,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "execute-agent-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1967,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "simulate-overspend-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 1983,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "simulate-decline-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2001,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "order-card-${order.id}",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2038,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "mcp-tool-inspector",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2070,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "mcp-tool-select",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2078,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "mcp-invoke-btn",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2104,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "mcp-args-textarea",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2116,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "mcp-output-pre",
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "line": 2122,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "sponsor-status-strip",
+      "file": "web/src/components/cockpit/sponsor-status-strip.tsx",
+      "line": 88,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "toggle-apimatic-contract",
+      "file": "web/src/components/cockpit/sponsor-status-strip.tsx",
+      "line": 98,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "sponsor-badge-${badge.id}",
+      "file": "web/src/components/cockpit/sponsor-status-strip.tsx",
+      "line": 114,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "apimatic-contract-panel",
+      "file": "web/src/components/cockpit/sponsor-status-strip.tsx",
+      "line": 149,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "bunui-streak-grid",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 457,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "streak-cell-${day.date}",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 552,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "streak-total-count",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 596,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "github-profile-link",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 610,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "hackathon-impact-streak-section",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 762,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "streak-mode-${mode.id}",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 811,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "streak-day-inspector",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 837,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "build-stage-${stage.category}",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 903,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "project-daily-ideas-panel",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 940,
+      "isConditional": true,
+      "mountStatus": "conditional"
+    },
+    {
+      "testId": "idea-input",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 977,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    },
+    {
+      "testId": "add-idea-btn",
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "line": 988,
+      "isConditional": false,
+      "mountStatus": "always mounted"
+    }
+  ],
+  "files": [
+    {
+      "file": "web/src/app/api/mcp/sdk-bridge/route.ts",
+      "lines": 39,
+      "symbolCount": 2,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/app/layout.tsx",
+      "lines": 36,
+      "symbolCount": 2,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/app/page.tsx",
+      "lines": 6,
+      "symbolCount": 1,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/components/cockpit/ag-studio-ledger-panel.tsx",
+      "lines": 507,
+      "symbolCount": 1,
+      "testIdCount": 8
+    },
+    {
+      "file": "web/src/components/cockpit/bryntum-procurement-scheduler.tsx",
+      "lines": 374,
+      "symbolCount": 1,
+      "testIdCount": 5
+    },
+    {
+      "file": "web/src/components/cockpit/found-brand-mark.tsx",
+      "lines": 488,
+      "symbolCount": 9,
+      "testIdCount": 1
+    },
+    {
+      "file": "web/src/components/cockpit/found-demo-data.ts",
+      "lines": 1103,
+      "symbolCount": 21,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/components/cockpit/found-inspiration-studio.tsx",
+      "lines": 792,
+      "symbolCount": 4,
+      "testIdCount": 7
+    },
+    {
+      "file": "web/src/components/cockpit/found-overlays.tsx",
+      "lines": 859,
+      "symbolCount": 8,
+      "testIdCount": 9
+    },
+    {
+      "file": "web/src/components/cockpit/found-views.tsx",
+      "lines": 2136,
+      "symbolCount": 9,
+      "testIdCount": 6
+    },
+    {
+      "file": "web/src/components/cockpit/paypal-sentinel-cockpit.tsx",
+      "lines": 2281,
+      "symbolCount": 1,
+      "testIdCount": 24
+    },
+    {
+      "file": "web/src/components/cockpit/sponsor-status-strip.tsx",
+      "lines": 196,
+      "symbolCount": 1,
+      "testIdCount": 4
+    },
+    {
+      "file": "web/src/components/cockpit/tactile-cards.tsx",
+      "lines": 1883,
+      "symbolCount": 36,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/components/cockpit/types.ts",
+      "lines": 166,
+      "symbolCount": 16,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/components/ui/project-streak-data.ts",
+      "lines": 2035,
+      "symbolCount": 7,
+      "testIdCount": 0
+    },
+    {
+      "file": "web/src/components/ui/streak-grid.tsx",
+      "lines": 1063,
+      "symbolCount": 9,
+      "testIdCount": 11
+    },
+    {
+      "file": "web/src/lib/utils.ts",
+      "lines": 7,
+      "symbolCount": 1,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/domain.rs",
+      "lines": 268,
+      "symbolCount": 21,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/error.rs",
+      "lines": 138,
+      "symbolCount": 2,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/lib.rs",
+      "lines": 1991,
+      "symbolCount": 4,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/main.rs",
+      "lines": 41,
+      "symbolCount": 0,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/patterns.rs",
+      "lines": 578,
+      "symbolCount": 7,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/paypal.rs",
+      "lines": 985,
+      "symbolCount": 6,
+      "testIdCount": 0
+    },
+    {
+      "file": "backend-rust/src/policy.rs",
+      "lines": 105,
+      "symbolCount": 4,
+      "testIdCount": 0
+    }
+  ]
+}

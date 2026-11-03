@@ -1,0 +1,41 @@
+{
+  "generatedAt": "2026-11-02T17:32:38.448Z",
+  "scanDurationMs": 0,
+  "workspace": "/Volumes/Dev/paypal-ai-hackathon/projects/project_1/web",
+  "totalFiles": 0,
+  "ports": {
+    "webNext": 4100,
+    "rustAxum": 4180
+  },
+  "apiRoutes": [],
+  "referenceLibraries": [
+    {
+      "name": "Found Warm Paper Theme",
+      "domain": "gofound.app/demo",
+      "description": "Warm paper canvas #FDFDFC, tactile cards, ledger panel, and inspiration studio"
+    },
+    {
+      "name": "Interfere Design System",
+      "domain": "design.interfere.com",
+      "description": "Recessed shell frame, 13-step typography scale, and semantic CSS tokens"
+    },
+    {
+      "name": "DitherCN Shader Blocks",
+      "domain": "dithercn.dev",
+      "description": "Dither Canvas, scanline shader, and Bayer matrix effects"
+    },
+    {
+      "name": "MDXCN Interactive Docs",
+      "domain": "mdxcn.dev",
+      "description": "Interactive markdown documentation figures and code blocks"
+    },
+    {
+      "name": "Bencho Slosh Blocks",
+      "domain": "bencho.dev/blocks/slosh",
+      "description": "Fluid liquid badges, interactive progress strips, and streak components"
+    }
+  ],
+  "symbols": [],
+  "testIds": [],
+  "files": []
+}
