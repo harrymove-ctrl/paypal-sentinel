@@ -379,11 +379,13 @@ export function FoundNonBlockingSheet({
   const [shieldDossier, setShieldDossier] =
     useState<DisputeShieldDossier | null>(null);
   const [shieldBusy, setShieldBusy] = useState(false);
-  const [showRawJson, setShowRawJson] = useState(true);
+  const [sheetTab, setSheetTab] = useState<"receipt" | "shield" | "json">(
+    "receipt",
+  );
 
   useEffect(() => {
     setShieldDossier(null);
-    setShowRawJson(true);
+    setSheetTab("receipt");
   }, [docId]);
 
   if (!docId) return null;
@@ -401,18 +403,15 @@ export function FoundNonBlockingSheet({
       ? `PayPal Orders v2 · ${matchedOrder.mcp_tool || "sentinel_direct_card_capture"}${matchedOrder.card_last4 ? ` · Visa *${matchedOrder.card_last4}` : ""}`
       : "PayPal Orders v2 · Visa *1881");
   const statusLabel = matchedOrder?.status ?? "COMPLETED";
+  const isBlocked = statusLabel === "BLOCKED_BY_POLICY";
   const amountUsd =
     attachedReceipt?.gross_amount_usd ?? matchedOrder?.amount_usd ?? 240.0;
   const feeUsd =
     attachedReceipt?.fee_usd ??
-    (statusLabel === "BLOCKED_BY_POLICY"
-      ? 0
-      : Number((amountUsd * 0.029 + 0.3).toFixed(2)));
+    (isBlocked ? 0 : Number((amountUsd * 0.029 + 0.3).toFixed(2)));
   const netUsd =
     attachedReceipt?.net_amount_usd ??
-    (statusLabel === "BLOCKED_BY_POLICY"
-      ? 0
-      : Number((amountUsd - feeUsd).toFixed(2)));
+    (isBlocked ? 0 : Number((amountUsd - feeUsd).toFixed(2)));
   const currencyLabel =
     attachedReceipt?.currency ?? matchedOrder?.currency ?? "USD";
   const verdictLabel =
@@ -421,10 +420,11 @@ export function FoundNonBlockingSheet({
   const shortSuffix = docId.slice(-6);
   const receiptIdLabel =
     attachedReceipt?.receipt_id ?? `RCPT-PP-2026-${shortSuffix.toUpperCase()}`;
-  const captureIdLabel =
-    attachedReceipt?.paypal_capture_id ??
-    matchedOrder?.capture_id ??
-    `CAP-SBX-${shortSuffix.toUpperCase()}`;
+  const captureIdLabel = isBlocked
+    ? "NONE (Policy Blocked)"
+    : (attachedReceipt?.paypal_capture_id ??
+      matchedOrder?.capture_id ??
+      `CAP-SBX-${shortSuffix.toUpperCase()}`);
   const requestUuidLabel =
     attachedReceipt?.paypal_request_id_uuid ??
     `f47ac10b-58cc-4372-a567-0e02b2${shortSuffix.toLowerCase().padEnd(6, "0")}`;
@@ -463,29 +463,36 @@ export function FoundNonBlockingSheet({
             ],
           },
         },
-        response: {
-          id: docId,
-          status: statusLabel,
-          capture_id: captureIdLabel,
-          seller_receivable_breakdown: {
-            gross_amount: {
-              currency_code: currencyLabel,
-              value: amountUsd.toFixed(2),
+        response: isBlocked
+          ? {
+              id: docId,
+              status: "BLOCKED_BY_POLICY",
+              charged_usd: "0.00",
+              guardrail_reason: verdictLabel,
+            }
+          : {
+              id: docId,
+              status: statusLabel,
+              capture_id: captureIdLabel,
+              seller_receivable_breakdown: {
+                gross_amount: {
+                  currency_code: currencyLabel,
+                  value: amountUsd.toFixed(2),
+                },
+                paypal_fee: {
+                  currency_code: currencyLabel,
+                  value: feeUsd.toFixed(2),
+                },
+                net_amount: {
+                  currency_code: currencyLabel,
+                  value: netUsd.toFixed(2),
+                },
+              },
             },
-            paypal_fee: {
-              currency_code: currencyLabel,
-              value: feeUsd.toFixed(2),
-            },
-            net_amount: {
-              currency_code: currencyLabel,
-              value: netUsd.toFixed(2),
-            },
-          },
-        },
       };
 
   const handleRunDisputeShield = async () => {
-    if (shieldBusy) return;
+    if (shieldBusy || isBlocked) return;
     setShieldBusy(true);
     try {
       const apiBase = process.env.NEXT_PUBLIC_RUST_API_URL || "";
@@ -534,7 +541,7 @@ export function FoundNonBlockingSheet({
     >
       <div
         className="found-modal-card"
-        style={{ maxWidth: 540 }}
+        style={{ maxWidth: 500 }}
         onClick={(e) => e.stopPropagation()}
       >
         <div
@@ -542,253 +549,289 @@ export function FoundNonBlockingSheet({
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 10,
+            marginBottom: 8,
           }}
         >
-          <span className="found-muted" style={{ fontSize: 12 }}>
-            PayPal Sandbox Receipt &amp; Permit · {receiptIdLabel} · {docId}
+          <span className="found-muted found-mono" style={{ fontSize: 11.5 }}>
+            {receiptIdLabel} · {docId}
           </span>
           <button type="button" className="found-tlink" onClick={onClose}>
             Close
           </button>
         </div>
 
-        <h3 style={{ fontSize: 16, fontWeight: 600, margin: "0 0 4px" }}>
+        <h3 style={{ fontSize: 16.5, fontWeight: 600, margin: "0 0 3px" }}>
           {itemTitle}
         </h3>
-        <p className="found-muted" style={{ fontSize: 12.5, margin: "0 0 12px" }}>
+        <p className="found-muted" style={{ fontSize: 12.5, margin: "0 0 14px" }}>
           {verdictLabel}
         </p>
 
+        {/* Clean 3-Tab Progressive Disclosure Switcher */}
         <div
-          style={{
-            padding: 13,
-            borderRadius: 12,
-            background: "var(--soft)",
-            fontSize: 12.5,
-            marginBottom: 12,
-          }}
+          className="found-ctxsw"
+          role="tablist"
+          aria-label="Receipt inspection tabs"
+          style={{ marginBottom: 14 }}
         >
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              paddingBottom: 6,
-              borderBottom: "1px solid var(--line)",
-            }}
+          <button
+            type="button"
+            role="tab"
+            data-testid="sheet-tab-receipt"
+            aria-selected={sheetTab === "receipt"}
+            className={sheetTab === "receipt" ? "on" : ""}
+            onClick={() => setSheetTab("receipt")}
           >
-            <span>Merchant</span>
-            <b>{merchantLabel}</b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "6px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
+            Receipt
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-testid="sheet-tab-shield"
+            aria-selected={sheetTab === "shield"}
+            className={sheetTab === "shield" ? "on" : ""}
+            onClick={() => setSheetTab("shield")}
           >
-            <span>Payment Rail</span>
-            <b>{railLabel}</b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "6px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
+            Dispute Shield
+          </button>
+          <button
+            type="button"
+            role="tab"
+            data-testid="sheet-tab-json"
+            aria-selected={sheetTab === "json"}
+            className={sheetTab === "json" ? "on" : ""}
+            onClick={() => setSheetTab("json")}
           >
-            <span>PayPal API Endpoint</span>
-            <span className="found-mono" style={{ fontSize: 11 }}>
-              {apiEndpointLabel}
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "6px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
-          >
-            <span>PayPal-Request-Id (UUID v4)</span>
-            <span className="found-mono" style={{ fontSize: 11 }}>
-              {requestUuidLabel}
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "6px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
-          >
-            <span>SHA-256 Permit Chain</span>
-            <b className="found-mono" style={{ fontSize: 11.5, color: "var(--ok)" }}>
-              {permitHashPreview}
-            </b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              padding: "6px 0",
-              borderBottom: "1px solid var(--line)",
-            }}
-          >
-            <span>Status &amp; Capture ID</span>
-            <b className="found-mono">
-              {statusLabel} · {captureIdLabel}
-            </b>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              paddingTop: 6,
-            }}
-          >
-            <span>Gross / PayPal Fee / Net Settled</span>
-            <b className="found-mono" style={{ color: "var(--ok)" }}>
-              ${amountUsd.toFixed(2)} - ${feeUsd.toFixed(2)} fee = ${netUsd.toFixed(2)}{" "}
-              {currencyLabel}
-            </b>
-          </div>
+            Raw JSON
+          </button>
         </div>
 
-        {/* Raw PayPal REST OpenAPI 3.1 Request & Response JSON Proof */}
-        <div
-          data-testid="sheet-raw-paypal-json"
-          style={{
-            padding: 11,
-            borderRadius: 12,
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-            marginBottom: 12,
-            fontSize: 11.5,
-          }}
-        >
+        {sheetTab === "receipt" && (
+          <div style={{ fontSize: 13, marginBottom: 16 }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "8px 0",
+                borderTop: "1px solid var(--line)",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <span className="found-muted">Merchant</span>
+              <b>{merchantLabel}</b>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "8px 0",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <span className="found-muted">Payment rail</span>
+              <span style={{ fontWeight: 500, textAlign: "right" }}>
+                {railLabel}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "8px 0",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <span className="found-muted">PayPal Request ID</span>
+              <span className="found-mono" style={{ fontSize: 11.5 }}>
+                {requestUuidLabel.slice(0, 22)}...
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "8px 0",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <span className="found-muted">Permit hash</span>
+              <span
+                className="found-mono"
+                style={{ fontSize: 11.5, color: "var(--ok)" }}
+              >
+                {permitHashPreview}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "8px 0",
+                borderBottom: "1px solid var(--line)",
+              }}
+            >
+              <span className="found-muted">Capture ID</span>
+              <span className="found-mono" style={{ fontSize: 12 }}>
+                {statusLabel} · {captureIdLabel}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                gap: 12,
+                padding: "10px 0 4px",
+              }}
+            >
+              <span className="found-muted">Settlement</span>
+              {isBlocked ? (
+                <b className="found-mono" style={{ color: "var(--warn)" }}>
+                  $0.00 Charged (Blocked Before PayPal Call)
+                </b>
+              ) : (
+                <b className="found-mono" style={{ color: "var(--ok)" }}>
+                  ${amountUsd.toFixed(2)} gross · ${feeUsd.toFixed(2)} fee · $
+                  {netUsd.toFixed(2)} {currencyLabel} net
+                </b>
+              )}
+            </div>
+          </div>
+        )}
+
+        {sheetTab === "shield" && (
           <div
+            data-testid="dispute-shield-panel"
             style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              marginBottom: showRawJson ? 6 : 0,
+              padding: "12px 0",
+              borderTop: "1px solid var(--line)",
+              borderBottom: "1px solid var(--line)",
+              marginBottom: 16,
+              fontSize: 12.5,
             }}
           >
-            <b>Verifiable PayPal OpenAPI 3.1 Request &amp; Response JSON</b>
-            <button
-              type="button"
-              className="found-tlink"
-              style={{ fontSize: 11 }}
-              onClick={() => setShowRawJson((v) => !v)}
-            >
-              {showRawJson ? "Hide JSON" : "Show JSON"}
-            </button>
+            {isBlocked ? (
+              <p className="found-muted" style={{ margin: 0 }}>
+                No chargeback defense required. Rust SpendPolicy blocked this
+                order prior to PayPal capture, so $0.00 left the account.
+              </p>
+            ) : (
+              <>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 8,
+                    marginBottom: 6,
+                  }}
+                >
+                  <b>Automated Seller Evidence Defense</b>
+                  <span
+                    className="found-mono"
+                    style={{
+                      fontSize: 10.5,
+                      padding: "2px 7px",
+                      borderRadius: 999,
+                      background: "var(--accent-soft)",
+                      color: "var(--accent)",
+                      fontWeight: 600,
+                    }}
+                  >
+                    Patches #109 #118
+                  </span>
+                </div>
+                <p
+                  className="found-muted"
+                  style={{ margin: "0 0 10px", fontSize: 12 }}
+                >
+                  Compiles your SHA-256 Intent Mandate and carrier delivery proof
+                  into{" "}
+                  <code>POST /v1/customer/disputes/&#123;id&#125;/provide-evidence</code>.
+                </p>
+                {shieldDossier ? (
+                  <div
+                    data-testid="dispute-shield-result"
+                    style={{
+                      padding: 10,
+                      borderRadius: 10,
+                      background: "var(--soft)",
+                      fontFamily: "var(--mono)",
+                      fontSize: 11,
+                    }}
+                  >
+                    <div
+                      style={{
+                        color: "var(--ok)",
+                        fontWeight: 600,
+                        marginBottom: 4,
+                      }}
+                    >
+                      ✓ {shieldDossier.dispute_id} · {shieldDossier.status} (
+                      {(shieldDossier.win_probability * 100).toFixed(0)}% win)
+                    </div>
+                    {shieldDossier.evidence_items.map((ev) => (
+                      <div key={ev} style={{ marginTop: 3, color: "var(--ink)" }}>
+                        {ev}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    data-testid="submit-dispute-shield-btn"
+                    disabled={shieldBusy}
+                    onClick={() => void handleRunDisputeShield()}
+                    className="found-btn found-btn-primary"
+                    style={{ width: "100%", justifyContent: "center" }}
+                  >
+                    {shieldBusy
+                      ? "Submitting Evidence..."
+                      : "Simulate Chargeback & Submit Evidence"}
+                  </button>
+                )}
+              </>
+            )}
           </div>
-          {showRawJson && (
+        )}
+
+        {sheetTab === "json" && (
+          <div
+            data-testid="sheet-raw-paypal-json"
+            style={{
+              marginBottom: 16,
+              fontSize: 11.5,
+            }}
+          >
+            <div
+              className="found-muted"
+              style={{ fontSize: 11.5, marginBottom: 6 }}
+            >
+              {apiEndpointLabel}
+            </div>
             <pre
               style={{
                 margin: 0,
-                maxHeight: 130,
+                maxHeight: 220,
                 overflowY: "auto",
-                padding: 8,
-                borderRadius: 8,
+                padding: 10,
+                borderRadius: 10,
                 background: "var(--soft)",
                 fontFamily: "var(--mono)",
-                fontSize: 10.5,
-                lineHeight: 1.35,
+                fontSize: 11,
+                lineHeight: 1.4,
                 whiteSpace: "pre-wrap",
                 wordBreak: "break-word",
               }}
             >
               {JSON.stringify(rawPayPalPayload, null, 2)}
             </pre>
-          )}
-        </div>
-
-        {/* Dispute & Chargeback Evidence Shield (Fixes @paypal/agent-toolkit #109/#118) */}
-        <div
-          data-testid="dispute-shield-panel"
-          style={{
-            padding: 12,
-            borderRadius: 12,
-            border: "1px solid var(--line)",
-            background: "var(--surface)",
-            marginBottom: 14,
-            fontSize: 12,
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              gap: 8,
-              marginBottom: 6,
-            }}
-          >
-            <b style={{ fontSize: 12.5 }}>
-              Seller Chargeback &amp; SNAD Evidence Shield
-            </b>
-            <span
-              className="found-mono"
-              style={{
-                fontSize: 10.5,
-                padding: "2px 7px",
-                borderRadius: 999,
-                background: "var(--accent-soft)",
-                color: "var(--accent)",
-                fontWeight: 600,
-              }}
-            >
-              Fixes @paypal/mcp #109 #118
-            </span>
           </div>
-          <p className="found-muted" style={{ margin: "0 0 8px", fontSize: 11.5 }}>
-            Instead of @paypal/agent-toolkit&apos;s surrender-only{" "}
-            <code>accept_dispute_claim</code>, auto-compile your SHA-256 Intent
-            Mandate and carrier tracking into{" "}
-            <code>POST /v1/customer/disputes/&#123;id&#125;/provide-evidence</code>.
-          </p>
-          {shieldDossier ? (
-            <div
-              data-testid="dispute-shield-result"
-              style={{
-                padding: 10,
-                borderRadius: 8,
-                background: "var(--soft)",
-                fontFamily: "var(--mono)",
-                fontSize: 11,
-              }}
-            >
-              <div style={{ color: "var(--ok)", fontWeight: 600, marginBottom: 4 }}>
-                ✓ {shieldDossier.dispute_id} · {shieldDossier.status} (Win
-                Prob: {(shieldDossier.win_probability * 100).toFixed(0)}%)
-              </div>
-              {shieldDossier.evidence_items.map((ev) => (
-                <div key={ev} style={{ marginTop: 2, color: "var(--ink)" }}>
-                  {ev}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <button
-              type="button"
-              data-testid="submit-dispute-shield-btn"
-              disabled={shieldBusy}
-              onClick={() => void handleRunDisputeShield()}
-              className="found-btn"
-              style={{ width: "100%", justifyContent: "center", fontSize: 12 }}
-            >
-              {shieldBusy
-                ? "Submitting Evidence to PayPal Disputes API..."
-                : "Simulate SNAD Chargeback -> Auto-Submit Evidence Shield"}
-            </button>
-          )}
-        </div>
+        )}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button type="button" className="found-btn" onClick={onClose}>
@@ -820,7 +863,7 @@ export function FoundNonBlockingSheet({
               </button>
             </>
           ) : (
-            onCaptureOrder && statusLabel !== "BLOCKED_BY_POLICY" && (
+            onCaptureOrder && !isBlocked && (
               <button
                 type="button"
                 className="found-btn found-btn-primary"
@@ -829,7 +872,7 @@ export function FoundNonBlockingSheet({
                   onClose();
                 }}
               >
-                Re-Capture ${amountUsd.toFixed(0)} on PayPal Sandbox
+                Re-Capture ${amountUsd.toFixed(0)}
               </button>
             )
           )}
@@ -1022,12 +1065,25 @@ export function FoundUndoToast({
   message,
   onUndo,
   onDismiss,
+  suppressed = false,
 }: {
   message: string | null;
   onUndo?: () => void;
   onDismiss: () => void;
+  suppressed?: boolean;
 }) {
-  if (!message) return null;
+  const onDismissRef = useRef(onDismiss);
+  onDismissRef.current = onDismiss;
+
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => {
+      onDismissRef.current();
+    }, 2200);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+
+  if (!message || suppressed) return null;
   return (
     <div className="found-toast" role="status" data-testid="found-undo-toast">
       <span>{message}</span>
@@ -1036,7 +1092,7 @@ export function FoundUndoToast({
           type="button"
           onClick={() => {
             onUndo();
-            onDismiss();
+            onDismissRef.current();
           }}
           style={{
             background: "transparent",
@@ -1052,6 +1108,23 @@ export function FoundUndoToast({
           Undo
         </button>
       )}
+      <button
+        type="button"
+        aria-label="Dismiss notification"
+        onClick={() => onDismissRef.current()}
+        style={{
+          background: "transparent",
+          border: "none",
+          color: "inherit",
+          opacity: 0.7,
+          cursor: "pointer",
+          padding: "0 2px",
+          fontSize: 13,
+          lineHeight: 1,
+        }}
+      >
+        &times;
+      </button>
     </div>
   );
 }

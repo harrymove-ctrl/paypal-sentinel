@@ -693,6 +693,9 @@ export function PayPalSentinelCockpit() {
 
   // Core Sentinel State (Default Light Mode #FDFDFC to match gofound.app/demo)
   const [variant, setVariant] = useState<CockpitVariant>("command");
+  const [homeTab, setHomeTab] = useState<"brief" | "shop" | "patterns" | "mcp">(
+    "brief",
+  );
   const [isDark, setIsDark] = useState(false);
   const [debugOpen, setDebugOpen] = useState(false);
   const [stressLongValues, setStressLongValues] = useState(false);
@@ -1329,9 +1332,9 @@ export function PayPalSentinelCockpit() {
             disabled={busy}
             onClick={() => void handleSeedSandbox()}
             className="found-tlink"
-            style={{ fontSize: 12, marginRight: 8 }}
+            style={{ fontSize: 12, marginRight: 6 }}
           >
-            Re-Seed Sandbox
+            Reset
           </button>
 
           <button
@@ -1341,7 +1344,7 @@ export function PayPalSentinelCockpit() {
             className="found-sync-pill"
           >
             <span className={`found-dot${rustConnected ? " live" : ""}`} />
-            <span>Synced Nov 2</span>
+            <span>Live</span>
             <span
               style={{
                 position: "absolute",
@@ -1512,800 +1515,554 @@ export function PayPalSentinelCockpit() {
         ) : null}
 
         {/* ==================================================================
-            ROUTE 1: HOME (#/) — EXACT gofound.app/demo 600px CENTERED BRIEF
-            + STACKED TRIAGE DECK + EXTERNAL CTA BUTTON
+            ROUTE 1: HOME (#/) — PROGRESSIVE-DISCLOSURE 4-TAB WORKSPACE
+            1. Brief (600px Calm Morning Brief + 1-Card Triage Stack)
+            2. Agent Shop (Channel3 Catalog + 1-Click Capture + Recent Orders)
+            3. 12 Patterns (Dedicated PayPal + AI Pattern Studio)
+            4. MCP & Proof (@paypal/mcp Inspector + Sponsors + Streak Grid)
             ================================================================== */}
         {activeRoute === "home" && variant === "command" ? (
           <div>
-            <div className="found-home">
-              {/* 1. Date on Left + [ Work | Personal ] Pill Switcher on Right */}
-              <div className="found-hline">
-                <p className="found-kicker">Monday, November 2</p>
-                <div
-                  className="found-ctxsw"
-                  role="tablist"
-                  aria-label="Show work or personal"
+            {/* Clean Workspace Mode Bar (Zero Nested Boxes) */}
+            <div
+              data-testid="home-workspace-tabs"
+              style={{
+                maxWidth: homeTab === "brief" ? 600 : 880,
+                margin: "0 auto 20px",
+                transition: "max-width 0.2s ease",
+              }}
+              className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--line)] pb-3"
+            >
+              <div className="flex items-center gap-2 text-[12.5px] text-[var(--muted)]">
+                <span>Settled today:</span>
+                <b
+                  data-testid="daily-spent-value"
+                  className="font-mono text-[var(--ok)]"
                 >
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={contextMode === "work"}
-                    className={contextMode === "work" ? "on" : ""}
-                    onClick={() => setContextMode("work")}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="7" width="18" height="13" rx="2.5" />
-                      <path d="M9 7V5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2" />
-                    </svg>
-                    <span>Work</span>
-                  </button>
-                  <button
-                    type="button"
-                    role="tab"
-                    aria-selected={contextMode === "personal"}
-                    className={contextMode === "personal" ? "on" : ""}
-                    onClick={() => setContextMode("personal")}
-                  >
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M4 11l8-6.5L20 11v8.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19.5z" />
-                    </svg>
-                    <span>Personal</span>
-                  </button>
-                </div>
+                  ${ledger.daily_spent_usd.toFixed(2)}
+                </b>
+                <span>&middot;</span>
+                <span className="font-mono">
+                  ${ledger.remaining_daily_budget_usd.toFixed(0)} cap left
+                </span>
               </div>
 
-              {/* 1B. Clean 1-Line Subtitle (Zero Box Clutter) */}
-              <p
-                data-testid="hackathon-problem-brief"
-                className="mb-3 text-[12.5px] text-[var(--muted,#838380)]"
-              >
-                Autonomous PayPal treasury with deterministic Rust spend caps, instant milestone payouts, and multi-currency invoicing.
-              </p>
-
-              {/* 2. Exact 7-Row Borderless Morning Brief (.found-brief) — 100% PayPal + AI Native */}
               <div
-                className="found-brief"
-                role="region"
-                aria-label="Morning brief"
+                className="found-ctxsw flex-wrap"
+                role="tablist"
+                aria-label="Home workspace mode"
               >
                 <button
                   type="button"
-                  onClick={() => setActiveRoute("money")}
-                  className="found-bline"
+                  role="tab"
+                  data-testid="home-tab-brief"
+                  aria-selected={homeTab === "brief"}
+                  className={homeTab === "brief" ? "on" : ""}
+                  onClick={() => setHomeTab("brief")}
                 >
-                  <span className="found-bi">
-                    <FoundBrandIcon name="paypal" />
-                  </span>
-                  <span className="found-bk">Orders v2</span>
-                  <span className="found-bv">
-                    <b>${ledger.daily_spent_usd.toFixed(2)} settled</b> ·{" "}
-                    <span className="found-muted">
-                      ${ledger.remaining_daily_budget_usd.toFixed(0)} / ${ledger.policy.daily_budget_usd.toFixed(0)} cap
-                    </span>{" "}
-                    ·{" "}
-                    <span className="found-bwarn">
-                      {
-                        ledger.orders.filter(
-                          (o) => o.status === "BLOCKED_BY_POLICY",
-                        ).length
-                      }{" "}
-                      policy blocked
-                    </span>
-                  </span>
-                  <span className="found-ba">&rarr;</span>
+                  Brief
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => {
-                    const el = document.querySelector('[data-testid="paypal-inspiration-studio"]');
-                    el?.scrollIntoView({ behavior: "smooth" });
-                  }}
-                  className="found-bline"
+                  role="tab"
+                  data-testid="home-tab-shop"
+                  aria-selected={homeTab === "shop"}
+                  className={homeTab === "shop" ? "on" : ""}
+                  onClick={() => setHomeTab("shop")}
                 >
-                  <span className="found-bi">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M3 17l6-6 4 4 8-8" />
-                      <path d="M15 7h6v6" />
-                    </svg>
-                  </span>
-                  <span className="found-bk">A2A Agent</span>
-                  <span className="found-bv">
-                    <b>2 agent deals</b> ·{" "}
-                    <b>Nebula H100 ($320 &rarr; $265)</b> · Visa *1881
-                  </span>
-                  <span className="found-ba">&rarr;</span>
+                  Agent Shop
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => setActiveRoute("money")}
-                  className="found-bline"
+                  role="tab"
+                  data-testid="home-tab-patterns"
+                  aria-selected={homeTab === "patterns"}
+                  className={homeTab === "patterns" ? "on" : ""}
+                  onClick={() => setHomeTab("patterns")}
                 >
-                  <span className="found-bi">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3" y="6" width="18" height="12" rx="2.5" />
-                      <circle cx="12" cy="12" r="2.5" />
-                    </svg>
-                  </span>
-                  <span className="found-bk">Invoicing</span>
-                  <span className="found-bv">
-                    <b>$1,850</b> across <b>3 Invoices</b> ·{" "}
-                    <span className="found-muted">
-                      Atelier (€331 EUR + Pay Later 4x)
-                    </span>
-                  </span>
-                  <span className="found-ba">&rarr;</span>
+                  12 Patterns
                 </button>
-
                 <button
                   type="button"
-                  onClick={() => setActiveRoute("slack")}
-                  className="found-bline"
+                  role="tab"
+                  data-testid="home-tab-mcp"
+                  aria-selected={homeTab === "mcp"}
+                  className={homeTab === "mcp" ? "on" : ""}
+                  onClick={() => setHomeTab("mcp")}
                 >
-                  <span className="found-bi">
-                    <FoundBrandIcon name="slack" />
-                  </span>
-                  <span className="found-bk">Slack MCP</span>
-                  <span className="found-bv">
-                    <b>2 chat requests</b> ·{" "}
-                    <span className="found-bslflag">1 awaiting 1-tap ($120)</span> ·{" "}
-                    <span className="found-muted">#paperco-kiln</span>
-                  </span>
-                  <span className="found-ba">&rarr;</span>
+                  MCP &amp; Proof
                 </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setVariant("timeline");
-                    setActiveRoute("timeline");
-                  }}
-                  className="found-bline"
-                >
-                  <span className="found-bi">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <rect x="3.5" y="5" width="17" height="15.5" rx="2.5" />
-                      <path d="M3.5 9.5h17M8 3v4M16 3v4" />
-                    </svg>
-                  </span>
-                  <span className="found-bk">Payouts</span>
-                  <span className="found-bv">
-                    <b>
-                      {ledger.milestones.length} milestones ($
-                      {ledger.milestones
-                        .reduce((sum, m) => sum + m.amount_usd, 0)
-                        .toFixed(0)}
-                      )
-                    </b>{" "}
-                    · <b>Nebula $240 · TypeCraft $185</b> ·{" "}
-                    <span className="found-bwarn">
-                      {
-                        ledger.milestones.filter(
-                          (m) => m.state === "ESCROW_LOCKED",
-                        ).length
-                      }{" "}
-                      escrow
-                    </span>
-                  </span>
-                  <span className="found-ba">&rarr;</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setActiveRoute("calendar")}
-                  className="found-bline"
-                >
-                  <span className="found-bi">
-                    <svg
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.9"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <circle cx="12" cy="12" r="8.5" />
-                      <path d="M8.5 12.3l2.3 2.3 4.8-4.8" />
-                    </svg>
-                  </span>
-                  <span className="found-bk">Guardrails</span>
-                  <span className="found-bv">
-                    <b>0 chargebacks</b> · Duplicate SaaS ($49) paused · HMAC pass
-                  </span>
-                  <span className="found-ba">&rarr;</span>
-                </button>
-
-                <div className="found-bline found-bsetup">
-                  <span className="found-bi">
-                    <svg width="16" height="16" viewBox="0 0 18 18">
-                      <circle
-                        cx="9"
-                        cy="9"
-                        r="7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeOpacity="0.18"
-                        strokeWidth="2"
-                      />
-                      <circle
-                        cx="9"
-                        cy="9"
-                        r="7"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeDasharray="44 44"
-                        transform="rotate(-90 9 9)"
-                      />
-                    </svg>
-                  </span>
-                  <span className="found-bk">Sponsors</span>
-                  <span className="found-bv found-muted">
-                    5 of 5 connected (Channel3, APIMatic, AG Grid, Bryntum) ·{" "}
-                    <button
-                      type="button"
-                      className="found-bsetup-link"
-                      onClick={() => setActiveRoute("settings")}
-                    >
-                      Keys
-                    </button>
-                  </span>
-                  <span />
-                </div>
               </div>
+            </div>
 
-              {/* 3. Exact Stacked Triage Card (.found-stackwrap) + External CTA (.found-sacts) */}
-              <section
-                className="found-stackwrap"
-                aria-label="Action triage stack"
-              >
-                <div className="found-stackbar">
-                  <span>
-                    1 of {Math.max(1, activePileCards.length)} · &uarr;&darr; to
-                    flip, D done, L later, Enter act
-                  </span>
-                  <span className="found-snav">
+            {/* TAB 1: CALM MORNING BRIEF + 1-CARD TRIAGE STACK (Fits 1 Viewport) */}
+            {homeTab === "brief" ? (
+              <div className="found-home">
+                <div className="found-hline">
+                  <p className="found-kicker">Monday, November 2</p>
+                  <div
+                    className="found-ctxsw"
+                    role="tablist"
+                    aria-label="Show work or personal"
+                  >
                     <button
                       type="button"
-                      className="found-sarr"
-                      disabled={activePileCards.length <= 1}
-                      onClick={() => {
-                        if (frontCard) handleCardLater(frontCard);
-                      }}
-                      aria-label="Previous card"
+                      role="tab"
+                      aria-selected={contextMode === "work"}
+                      className={contextMode === "work" ? "on" : ""}
+                      onClick={() => setContextMode("work")}
                     >
-                      &lsaquo;
+                      <span>Work</span>
                     </button>
                     <button
                       type="button"
-                      className="found-sarr"
-                      disabled={activePileCards.length <= 1}
-                      onClick={() => {
-                        if (frontCard) handleCardLater(frontCard);
-                      }}
-                      aria-label="Next card"
+                      role="tab"
+                      aria-selected={contextMode === "personal"}
+                      className={contextMode === "personal" ? "on" : ""}
+                      onClick={() => setContextMode("personal")}
                     >
-                      &rsaquo;
+                      <span>Personal</span>
                     </button>
-                  </span>
+                  </div>
                 </div>
 
-                {frontCard ? (
-                  <>
-                    <div className="found-sdeck">
-                      {activePileCards.length > 2 ? (
-                        <div className="found-scard d2" aria-hidden="true" />
-                      ) : null}
-                      {activePileCards.length > 1 ? (
-                        <div className="found-scard d1" aria-hidden="true" />
-                      ) : null}
+                <p
+                  data-testid="hackathon-problem-brief"
+                  className="mb-3.5 text-[13px] text-[var(--muted)]"
+                >
+                  Autonomous PayPal treasury guarded by deterministic Rust spend policies.
+                </p>
 
-                      <div ref={frontCardRef} className="found-scard">
-                        <div className="found-shead">
-                          <span className="found-skind">$</span>
-                          <span className="found-shead-r">
-                            <span className="found-swhy">
-                              {frontCard.badge} · {frontCard.meta}
+                {/* Streamlined 4-Row Morning Brief */}
+                <div
+                  className="found-brief"
+                  role="region"
+                  aria-label="Morning brief"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setActiveRoute("money")}
+                    className="found-bline"
+                  >
+                    <span className="found-bi">
+                      <FoundBrandIcon name="paypal" />
+                    </span>
+                    <span className="found-bk">Treasury</span>
+                    <span className="found-bv">
+                      <b>${ledger.daily_spent_usd.toFixed(2)} settled</b> ·{" "}
+                      <span className="found-muted">
+                        $11,000 across 2 invoices to chase
+                      </span>
+                    </span>
+                    <span className="found-ba">&rarr;</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHomeTab("shop")}
+                    className="found-bline"
+                  >
+                    <span className="found-bi">
+                      <CreditCard className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="found-bk">Agent Shop</span>
+                    <span className="found-bv">
+                      <b>Nebula H100 ($240)</b> ·{" "}
+                      <span className="found-muted">
+                        Channel3 catalog · Visa *1881 ready
+                      </span>
+                    </span>
+                    <span className="found-ba">&rarr;</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHomeTab("patterns")}
+                    className="found-bline"
+                  >
+                    <span className="found-bi">
+                      <Wallet className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="found-bk">12 Patterns</span>
+                    <span className="found-bv">
+                      <b>5 tracks</b> ·{" "}
+                      <span className="found-muted">
+                        A2A, HTTP 402, Payouts, Dispute Shield
+                      </span>
+                    </span>
+                    <span className="found-ba">&rarr;</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setHomeTab("mcp")}
+                    className="found-bline"
+                  >
+                    <span className="found-bi">
+                      <ShieldAlert className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="found-bk">Guardrails</span>
+                    <span className="found-bv">
+                      <span className="found-bwarn">
+                        {
+                          ledger.orders.filter(
+                            (o) => o.status === "BLOCKED_BY_POLICY",
+                          ).length
+                        }{" "}
+                        noise blocked ($0)
+                      </span>{" "}
+                      ·{" "}
+                      <span className="found-muted">
+                        &le; $500/order · Risk &le; 35
+                      </span>
+                    </span>
+                    <span className="found-ba">&rarr;</span>
+                  </button>
+                </div>
+
+                {/* Focused 1-Card Triage Stack */}
+                <section
+                  className="found-stackwrap"
+                  aria-label="Action triage stack"
+                >
+                  <div className="found-stackbar">
+                    <span>
+                      1 of {Math.max(1, activePileCards.length)} · Enter to
+                      settle, L later, D done
+                    </span>
+                    <span className="found-snav">
+                      <button
+                        type="button"
+                        className="found-sarr"
+                        disabled={activePileCards.length <= 1}
+                        onClick={() => {
+                          if (frontCard) handleCardLater(frontCard);
+                        }}
+                        aria-label="Previous card"
+                      >
+                        &lsaquo;
+                      </button>
+                      <button
+                        type="button"
+                        className="found-sarr"
+                        disabled={activePileCards.length <= 1}
+                        onClick={() => {
+                          if (frontCard) handleCardLater(frontCard);
+                        }}
+                        aria-label="Next card"
+                      >
+                        &rsaquo;
+                      </button>
+                    </span>
+                  </div>
+
+                  {frontCard ? (
+                    <>
+                      <div className="found-sdeck">
+                        {activePileCards.length > 2 ? (
+                          <div className="found-scard d2" aria-hidden="true" />
+                        ) : null}
+                        {activePileCards.length > 1 ? (
+                          <div className="found-scard d1" aria-hidden="true" />
+                        ) : null}
+
+                        <div ref={frontCardRef} className="found-scard">
+                          <div className="found-shead">
+                            <span className="found-skind">$</span>
+                            <span className="found-shead-r">
+                              <span className="found-swhy">
+                                {frontCard.badge} · {frontCard.meta}
+                              </span>
                             </span>
-                            <button
-                              type="button"
-                              onClick={() => setFixMenuOpen((prev) => !prev)}
-                              aria-label="More options"
-                              className="found-tlink"
-                              style={{ textDecoration: "none" }}
-                            >
-                              &middot;&middot;&middot;
-                            </button>
-                          </span>
+                          </div>
+
+                          <h2 className="found-stitle">{frontCard.title}</h2>
+                          <div className="found-smeta">{frontCard.body}</div>
                         </div>
-
-                        <h2 className="found-stitle">{frontCard.title}</h2>
-                        <div className="found-smeta">{frontCard.body}</div>
                       </div>
-                    </div>
 
-                    {/* External Centered Primary Action Pill + Later / Done Links (Exact gofound.app/demo .sacts) */}
-                    <div className="found-sacts">
+                      <div className="found-sacts">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (frontCard.sku && frontCard.amountUsd) {
+                              void executeAgentIntent({
+                                prompt: frontCard.title,
+                                sku: frontCard.sku,
+                                amount: frontCard.amountUsd,
+                                directCardCapture: true,
+                              });
+                            }
+                            handleCardDone(frontCard);
+                          }}
+                          className="found-sbtn-go"
+                        >
+                          {frontCard.primaryAction}
+                        </button>
+
+                        <div className="found-ssec">
+                          <button
+                            type="button"
+                            onClick={() => handleCardLater(frontCard)}
+                          >
+                            Later
+                          </button>
+                          <span>&middot;</span>
+                          <button
+                            type="button"
+                            onClick={() => handleCardDone(frontCard)}
+                          >
+                            Done
+                          </button>
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="found-card flex items-center justify-between">
+                      <div>
+                        <b className="text-[14px]">
+                          You&apos;re all caught up right now.
+                        </b>
+                        <p className="found-muted text-[12.5px]">
+                          Nothing else needs your attention.
+                        </p>
+                      </div>
                       <button
                         type="button"
                         onClick={() => {
-                          if (frontCard.sku && frontCard.amountUsd) {
-                            void executeAgentIntent({
-                              prompt: frontCard.title,
-                              sku: frontCard.sku,
-                              amount: frontCard.amountUsd,
-                              directCardCapture: true,
-                            });
-                          }
-                          handleCardDone(frontCard);
+                          setTriageCards(INITIAL_TRIAGE_CARDS);
+                          setLaterCards([]);
+                          setDoneCards([]);
+                          setPile("now");
                         }}
-                        className="found-sbtn-go"
+                        className="found-tlink"
                       >
-                        {frontCard.primaryAction}
+                        Restore cards
                       </button>
-
-                      <div className="found-ssec">
-                        <button
-                          type="button"
-                          onClick={() => handleCardLater(frontCard)}
-                        >
-                          Later
-                        </button>
-                        <span>&middot;</span>
-                        <button
-                          type="button"
-                          onClick={() => handleCardDone(frontCard)}
-                        >
-                          Done
-                        </button>
-                      </div>
                     </div>
-                  </>
-                ) : (
-                  <div className="found-card flex items-center justify-between">
-                    <div>
-                      <b className="text-[14px]">
-                        You&apos;re all caught up right now.
-                      </b>
-                      <p className="found-muted text-[12.5px]">
-                        Nothing else needs your attention.
-                      </p>
+                  )}
+                </section>
+              </div>
+            ) : null}
+
+            {/* TAB 2: CLEAN 2-COLUMN AGENT SHOP & GUARDRAILS */}
+            {homeTab === "shop" ? (
+              <div style={{ maxWidth: 880, margin: "0 auto" }}>
+                <section
+                  data-testid="found-console-section"
+                  aria-label="Agentic procurement command console"
+                  className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12"
+                >
+                  {/* Left: Catalog & Instant Checkout */}
+                  <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 lg:col-span-6">
+                    <div className="mb-3.5 flex items-baseline justify-between">
+                      <h3 className="text-[15px] font-semibold text-[var(--ink)]">
+                        Catalog &amp; Instant Checkout
+                      </h3>
+                      <span className="font-mono text-[11px] text-[var(--muted)]">
+                        &le; $500 cap &middot; Risk &le; 35
+                      </span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setTriageCards(INITIAL_TRIAGE_CARDS);
-                        setLaterCards([]);
-                        setDoneCards([]);
-                        setPile("now");
-                      }}
-                      className="found-tlink"
-                    >
-                      Restore demo cards
-                    </button>
-                  </div>
-                )}
-              </section>
-            </div>
 
-            {/* ==============================================================
-                LOWER PAYPAL AI + RUST PROCUREMENT, CHANNEL3 & @paypal/mcp DESK
-                ============================================================== */}
-            <div className="mt-10 border-t border-[var(--line)] pt-8">
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <h2 className="text-[15px] font-semibold text-[var(--ink)]">
-                    PayPal Sandbox &amp; Rust Spend Guardrails
-                  </h2>
-                  <p className="text-[12.5px] text-[var(--muted)]">
-                    Deterministic Rust Axum (:4180) spend caps, Channel3 retail
-                    catalog, and @paypal/mcp tool execution.
-                  </p>
-                </div>
-                <div className="found-ctxsw">
-                  <button
-                    type="button"
-                    className={variant === "command" ? "on" : ""}
-                    onClick={() => {
-                      setVariant("command");
-                      setActiveRoute("home");
-                    }}
-                  >
-                    Desk
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVariant("ledger");
-                      setActiveRoute("ledger");
-                    }}
-                  >
-                    AG Studio Grid
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setVariant("timeline");
-                      setActiveRoute("timeline");
-                    }}
-                  >
-                    Bryntum Scheduler
-                  </button>
-                </div>
-              </div>
+                    <div className="flex gap-2 mb-3">
+                      <input
+                        type="search"
+                        data-testid="channel3-search-input"
+                        value={channel3Query}
+                        onChange={(e) => {
+                          const nextVal = e.target.value;
+                          setChannel3Query(nextVal);
+                          void runChannel3Query(nextVal);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            void handleChannel3Search(channel3Query);
+                          }
+                        }}
+                        placeholder="Search: gpu, monitor, dock, keyboard..."
+                        className="min-h-9 flex-1 rounded-lg border border-[var(--line)] bg-[var(--soft)]/60 px-3 text-xs text-[var(--ink)] outline-none focus:border-[var(--accent)]"
+                      />
+                      <button
+                        type="button"
+                        data-testid="channel3-search-btn"
+                        onClick={() => void handleChannel3Search(channel3Query)}
+                        className="found-sbtn-go text-xs"
+                      >
+                        <Search className="h-3.5 w-3.5" />
+                        Search
+                      </button>
+                    </div>
 
-              {/* Signal vs. Noise Explainer Strip: Clean 3-Column Divided Card (Zero Nested Grey Boxes) */}
-              <div
-                data-testid="signal-vs-noise-explainer"
-                className="mb-5 grid grid-cols-1 divide-y divide-[var(--line)] rounded-2xl border border-[var(--line)] bg-[var(--surface)] shadow-[0_1px_2px_rgba(24,24,27,0.04)] sm:grid-cols-3 sm:divide-x sm:divide-y-0"
-              >
-                <div className="p-4">
-                  <div className="flex items-center justify-between text-[11px] font-medium text-[var(--muted)]">
-                    <span>1. Incoming Agent Stream</span>
-                    <span className="rounded-full bg-amber-50 px-2 py-0.5 font-mono text-[10px] font-medium text-amber-800">
-                      Signal + Noise
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[12.5px] leading-snug text-[var(--ink)]">
-                    AI agents request compute and payouts, mixing valid tasks with{" "}
-                    <b>over-budget ($850)</b> or <b>high-risk vendor</b> noise.
-                  </p>
-                </div>
-
-                <div className="p-4">
-                  <div className="flex items-center justify-between text-[11px] font-medium text-[var(--muted)]">
-                    <span>2. Rust Policy Filter (:4180)</span>
-                    <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-[10px] font-medium text-blue-700">
-                      Deterministic
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[12.5px] leading-snug text-[var(--ink)]">
-                    Blocks any order over <b>$500</b>, vendor risk above{" "}
-                    <b>35/100</b>, or duplicate replay keys before PayPal is called.
-                  </p>
-                </div>
-
-                <div className="p-4">
-                  <div className="flex items-center justify-between text-[11px] font-medium text-[var(--muted)]">
-                    <span>3. Safe PayPal Settlement</span>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-mono text-[10px] font-medium text-emerald-700">
-                      $0 Lost to Noise
-                    </span>
-                  </div>
-                  <p className="mt-1.5 text-[12.5px] leading-snug text-[var(--ink)]">
-                    Approved signal settles via <b>PayPal Orders v2 (*1881)</b>;
-                    blocked noise is logged with <b>$0.00 charged</b>.
-                  </p>
-                </div>
-              </div>
-
-              {/* 4 Rust Guardrail KPI Cards */}
-              <section
-                aria-label="Rust treasury guardrails"
-                className="mb-5 grid grid-cols-1 items-stretch gap-3 sm:grid-cols-2 lg:grid-cols-4"
-              >
-                <DitherStatCard
-                  title="Approved Daily Spend"
-                  badge="SIGNAL"
-                  badgeTone="ok"
-                  value={`$${ledger.daily_spent_usd.toFixed(2)}`}
-                  valueTestId="daily-spent-value"
-                  subtitle={`$${ledger.remaining_daily_budget_usd.toFixed(0)} remaining of $${ledger.policy.daily_budget_usd.toFixed(0)} daily cap`}
-                  progressPercent={Math.min(
-                    100,
-                    (ledger.daily_spent_usd / ledger.policy.daily_budget_usd) * 100,
-                  )}
-                  sparklineTone="green"
-                />
-
-                <DitherStatCard
-                  title="Single-Order Limit"
-                  badge="CAP"
-                  badgeTone="ok"
-                  value={`$${ledger.policy.max_single_order_usd.toFixed(2)}`}
-                  subtitle="Auto-blocks any AI purchase above $500"
-                  gaugePercent={Math.min(
-                    100,
-                    (ledger.policy.max_single_order_usd / 1000) * 100,
-                  )}
-                  gaugeTone="ok"
-                  sparklineTone="blue"
-                />
-
-                <DitherStatCard
-                  title="Vendor Risk Cutoff"
-                  badge="JEV AI"
-                  badgeTone="ok"
-                  value={`<= ${ledger.policy.max_risk_score} / 100`}
-                  subtitle="Blocks unverified gray-market sellers"
-                  gaugePercent={ledger.policy.max_risk_score}
-                  gaugeTone="accent"
-                  sparklineTone="amber"
-                />
-
-                <DitherStatCard
-                  title="Sandbox Activity"
-                  badge="LIVE"
-                  badgeTone="ok"
-                  value={`${ledger.orders.filter((o) => o.status !== "BLOCKED_BY_POLICY").length} / ${ledger.orders.length} Settled`}
-                  subtitle={`${ledger.orders.filter((o) => o.status !== "BLOCKED_BY_POLICY").length} signal approved · ${ledger.orders.filter((o) => o.status === "BLOCKED_BY_POLICY").length} noise blocked`}
-                  progressPercent={Math.min(100, (ledger.orders.length / 10) * 100)}
-                  sparklineTone="pink"
-                />
-              </section>
-
-              {/* Official PayPal AI Hackathon 5 Inspiration Tracks & 8 Capabilities Studio */}
-              <FoundInspirationStudio
-                apiBase={RUST_API_BASE}
-                onPatternSettled={handlePatternSettled}
-                onOpenReceipt={handleOpenReceiptFromAnywhere}
-              />
-
-              <section
-                data-testid="found-console-section"
-                aria-label="Agentic procurement command console"
-                className="mb-5 grid grid-cols-1 items-stretch gap-5 lg:grid-cols-12"
-              >
-                {/* Left Column: Clean Single-Layer Channel3 Procurement & Guardrail Card */}
-                <div className="flex h-full flex-col lg:col-span-6">
-                  <MdxcnFrame
-                    title="1. Test Catalog & Noise Simulator"
-                    subtitle="Channel3 · Orders v2"
-                    className="h-full flex-1"
-                  >
-                    <div className="flex flex-1 flex-col justify-between gap-4">
-                      {/* Channel3 Product Search & Clean 4-Row Selectable List */}
-                      <div className="space-y-3">
-                        <div className="flex gap-2">
-                          <input
-                            type="search"
-                            data-testid="channel3-search-input"
-                            value={channel3Query}
-                            onChange={(e) => {
-                              const nextVal = e.target.value;
-                              setChannel3Query(nextVal);
-                              void runChannel3Query(nextVal);
-                            }}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter") {
-                                void handleChannel3Search(channel3Query);
-                              }
-                            }}
-                            placeholder="Search catalog: gpu, monitor, dock, keyboard, sdk..."
-                            className="min-h-9 flex-1 rounded-lg border border-[var(--line)] bg-[var(--soft)]/60 px-3 text-xs text-[var(--ink)] outline-none focus:border-[var(--accent)]"
-                          />
+                    <div className="divide-y divide-[var(--line)] border-t border-b border-[var(--line)]">
+                      {channel3Results.slice(0, 4).map((item) => {
+                        const isHighRisk =
+                          item.risk_score > ledger.policy.max_risk_score;
+                        const isSelected = selectedSku === item.sku;
+                        const cleanMerchant = item.merchant_name
+                          .replace(" Unverified", "")
+                          .replace(" API Studio", " Studio");
+                        return (
                           <button
+                            key={item.id}
                             type="button"
-                            data-testid="channel3-search-btn"
-                            onClick={() => void handleChannel3Search(channel3Query)}
-                            className="found-sbtn-go text-xs"
-                          >
-                            <Search className="h-3.5 w-3.5" />
-                            Search
-                          </button>
-                        </div>
-
-                        {/* Clean Single-Column Selectable Rows (Zero 2-Line Title Wrapping) */}
-                        <div className="divide-y divide-[var(--line)] overflow-hidden rounded-xl border border-[var(--line)] bg-[var(--surface)]">
-                          {channel3Results.slice(0, 4).map((item) => {
-                            const isHighRisk =
-                              item.risk_score > ledger.policy.max_risk_score;
-                            const isSelected = selectedSku === item.sku;
-                            const cleanMerchant = item.merchant_name
-                              .replace(" Unverified", "")
-                              .replace(" API Studio", " Studio");
-                            return (
-                              <button
-                                key={item.id}
-                                type="button"
-                                data-testid={`channel3-item-${item.sku}`}
-                                onClick={() => {
-                                  setSelectedSku(item.sku);
-                                  setAmountInput(String(item.price_usd));
-                                  setPromptInput(
-                                    `Procure ${item.title} (${item.sku}) from ${item.merchant_name} via PayPal Orders v2`,
-                                  );
-                                  const nextArgs = {
-                                    sku: item.sku,
+                            data-testid={`channel3-item-${item.sku}`}
+                            onClick={() => {
+                              setSelectedSku(item.sku);
+                              setAmountInput(String(item.price_usd));
+                              setPromptInput(
+                                `Procure ${item.title} (${item.sku}) from ${item.merchant_name} via PayPal Orders v2`,
+                              );
+                              const nextArgs = {
+                                sku: item.sku,
+                                amount_usd: item.price_usd,
+                              };
+                              setMcpArgsText(JSON.stringify(nextArgs, null, 2));
+                              setMcpOutputText(
+                                JSON.stringify(
+                                  {
+                                    tool: selectedMcpTool,
+                                    item: item.title,
                                     amount_usd: item.price_usd,
-                                  };
-                                  setMcpArgsText(
-                                    JSON.stringify(nextArgs, null, 2),
-                                  );
-                                  setMcpOutputText(
-                                    JSON.stringify(
-                                      {
-                                        tool: selectedMcpTool,
-                                        item: item.title,
-                                        amount_usd: item.price_usd,
-                                        verdict: isHighRisk
-                                          ? "BLOCKED_HIGH_RISK_NOISE"
-                                          : "APPROVED_SIGNAL",
-                                      },
-                                      null,
-                                      2,
-                                    ),
-                                  );
-                                }}
-                                className={cn(
-                                  "flex w-full items-center justify-between gap-3 px-3.5 py-2.5 text-left transition cursor-pointer",
-                                  isSelected
-                                    ? "bg-[var(--accent-soft)]/70"
-                                    : "hover:bg-[var(--soft)]/60",
-                                )}
-                              >
-                                <div className="flex min-w-0 flex-1 items-center gap-2.5">
-                                  <span
-                                    className={cn(
-                                      "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
-                                      isSelected
-                                        ? "border-[var(--accent)] bg-[var(--accent)]"
-                                        : "border-[var(--line)] bg-[var(--surface)]",
-                                    )}
-                                  >
-                                    {isSelected ? (
-                                      <span className="h-1.5 w-1.5 rounded-full bg-white" />
-                                    ) : null}
-                                  </span>
-                                  <div className="min-w-0 flex-1">
-                                    <div className="truncate text-[13px] font-medium text-[var(--ink)]">
-                                      {item.title}
-                                    </div>
-                                    <div className="truncate text-[11.5px] text-[var(--muted)]">
-                                      {cleanMerchant}
-                                    </div>
-                                  </div>
-                                </div>
+                                    verdict: isHighRisk
+                                      ? "BLOCKED_HIGH_RISK_NOISE"
+                                      : "APPROVED_SIGNAL",
+                                  },
+                                  null,
+                                  2,
+                                ),
+                              );
+                            }}
+                            className={cn(
+                              "flex w-full items-center justify-between gap-3 py-2.5 px-2 text-left transition cursor-pointer rounded-lg",
+                              isSelected
+                                ? "bg-[var(--soft)]"
+                                : "hover:bg-[var(--soft)]/50",
+                            )}
+                          >
+                            <div className="min-w-0 flex-1">
+                              <div className="truncate text-[13px] font-medium text-[var(--ink)]">
+                                {item.title}
+                              </div>
+                              <div className="truncate text-[11.5px] text-[var(--muted)]">
+                                {cleanMerchant} &middot;{" "}
+                                <span
+                                  className={
+                                    isHighRisk
+                                      ? "text-rose-600 font-medium"
+                                      : "text-[var(--ok)]"
+                                  }
+                                >
+                                  Risk {item.risk_score}
+                                </span>
+                              </div>
+                            </div>
 
-                                <div className="flex shrink-0 items-center gap-2.5">
-                                  <span
-                                    className={cn(
-                                      "rounded-full px-2 py-0.5 font-mono text-[10.5px] font-medium",
-                                      isHighRisk
-                                        ? "bg-rose-50 text-rose-700"
-                                        : "bg-emerald-50 text-emerald-700",
-                                    )}
-                                  >
-                                    {isHighRisk
-                                      ? `Noise · Risk ${item.risk_score}`
-                                      : `Safe · Risk ${item.risk_score}`}
-                                  </span>
-                                  <span className="w-12 text-right font-mono text-[13px] font-semibold tabular-nums text-[var(--ink)]">
-                                    ${item.price_usd}
-                                  </span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </div>
+                            <span className="font-mono text-[13px] font-semibold tabular-nums text-[var(--ink)]">
+                              ${item.price_usd}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div className="mt-4 space-y-3">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        <button
+                          type="button"
+                          data-testid="direct-card-capture-btn"
+                          disabled={busy}
+                          onClick={() =>
+                            void executeAgentIntent({
+                              prompt: `Headless ACDC Card 4012888888881881 Capture for SKU ${selectedSku}`,
+                              sku: selectedSku,
+                              amount: Number(amountInput) || 240,
+                              directCardCapture: true,
+                            })
+                          }
+                          className="found-sbtn-go w-full justify-center text-xs"
+                        >
+                          <CreditCard className="h-3.5 w-3.5 shrink-0" />
+                          <span>Pay ${amountInput} &middot; Visa *1881</span>
+                        </button>
+
+                        <button
+                          type="button"
+                          data-testid="execute-agent-btn"
+                          disabled={busy}
+                          onClick={() => void executeAgentIntent()}
+                          className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--ink)] transition hover:bg-[var(--soft)] cursor-pointer"
+                        >
+                          <span>{busy ? "Executing..." : "Verify & Settle"}</span>
+                        </button>
                       </div>
 
-                      {/* Primary Action Row + Clean Inline Noise Simulation Strip */}
-                      <div className="space-y-3 border-t border-[var(--line)] pt-3">
-                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-[11.5px] text-[var(--muted)]">
+                        <span>Test guardrails ($0 charged):</span>
+                        <div className="flex items-center gap-3">
                           <button
                             type="button"
-                            data-testid="direct-card-capture-btn"
+                            data-testid="simulate-overspend-btn"
                             disabled={busy}
                             onClick={() =>
                               void executeAgentIntent({
-                                prompt: `Headless ACDC Card 4012888888881881 Capture for SKU ${selectedSku}`,
-                                sku: selectedSku,
-                                amount: Number(amountInput) || 240,
+                                prompt:
+                                  "Test $850 overspend guardrail against $500 single-order cap",
+                                sku: "CH3-GPU-101",
+                                amount: 850,
                                 directCardCapture: true,
                               })
                             }
-                            className="found-sbtn-go w-full justify-center text-xs"
+                            className="found-tlink text-[11.5px] cursor-pointer"
                           >
-                            <CreditCard className="h-3.5 w-3.5 shrink-0" />
-                            <span>Pay ${amountInput} · Visa *1881</span>
+                            Over-cap ($850)
                           </button>
 
                           <button
                             type="button"
-                            data-testid="execute-agent-btn"
+                            data-testid="simulate-decline-btn"
                             disabled={busy}
-                            onClick={() => void executeAgentIntent()}
-                            className="inline-flex min-h-9 w-full items-center justify-center gap-1.5 rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2 text-xs font-medium text-[var(--ink)] transition hover:bg-[var(--soft)] cursor-pointer"
+                            onClick={() =>
+                              void executeAgentIntent({
+                                prompt:
+                                  "Simulate PayPal Sandbox INSTRUMENT_DECLINED via CCREJECT-IF",
+                                sku: selectedSku,
+                                amount: 125,
+                                directCardCapture: true,
+                                simulateDecline: "INSTRUMENT_DECLINED",
+                              })
+                            }
+                            className="found-tlink text-[11.5px] cursor-pointer"
                           >
-                            <Wallet className="h-3.5 w-3.5 shrink-0 text-[var(--accent)]" />
-                            <span>{busy ? "Executing..." : "Verify & Settle"}</span>
+                            Card decline
                           </button>
-                        </div>
-
-                        <div className="flex flex-wrap items-center justify-between gap-2 text-[11.5px]">
-                          <span className="text-[var(--muted)]">
-                            Simulate Bad Agent Noise ($0 charged):
-                          </span>
-                          <div className="flex flex-wrap items-center gap-1.5">
-                            <button
-                              type="button"
-                              data-testid="simulate-overspend-btn"
-                              disabled={busy}
-                              onClick={() =>
-                                void executeAgentIntent({
-                                  prompt:
-                                    "Test $850 overspend guardrail against $500 single-order cap",
-                                  sku: "CH3-GPU-101",
-                                  amount: 850,
-                                  directCardCapture: true,
-                                })
-                              }
-                              className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-2.5 py-0.5 text-[11.5px] font-medium text-rose-700 hover:bg-rose-50 cursor-pointer"
-                            >
-                              Block $850 Over-Cap
-                            </button>
-
-                            <button
-                              type="button"
-                              data-testid="simulate-decline-btn"
-                              disabled={busy}
-                              onClick={() =>
-                                void executeAgentIntent({
-                                  prompt:
-                                    "Simulate PayPal Sandbox INSTRUMENT_DECLINED via CCREJECT-IF",
-                                  sku: selectedSku,
-                                  amount: 125,
-                                  directCardCapture: true,
-                                  simulateDecline: "INSTRUMENT_DECLINED",
-                                })
-                              }
-                              className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-2.5 py-0.5 text-[11.5px] font-medium text-rose-700 hover:bg-rose-50 cursor-pointer"
-                            >
-                              Block Card Decline
-                            </button>
-                          </div>
                         </div>
                       </div>
                     </div>
-                  </MdxcnFrame>
-                </div>
+                  </div>
 
-                {/* Right Column: Clean Signal vs. Noise Ledger & @paypal/mcp Tool Inspector */}
-                <div className="flex h-full flex-col gap-5 lg:col-span-6">
-                  <MdxcnFrame
-                    title="2. Signal vs. Blocked Noise Log"
-                    subtitle={`${filteredOrders.filter((o) => o.status !== "BLOCKED_BY_POLICY").length} approved ($${ledger.daily_spent_usd.toFixed(0)}) · ${filteredOrders.filter((o) => o.status === "BLOCKED_BY_POLICY").length} blocked ($0)`}
-                    className="flex-1"
-                  >
-                    <div className="divide-y divide-[var(--line)]">
+                  {/* Right: Recent Activity & Blocked Noise */}
+                  <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 lg:col-span-6">
+                    <div className="mb-3 flex items-baseline justify-between">
+                      <h3 className="text-[15px] font-semibold text-[var(--ink)]">
+                        Recent Orders
+                      </h3>
+                      <span className="text-[12px] text-[var(--muted)]">
+                        {
+                          filteredOrders.filter(
+                            (o) => o.status !== "BLOCKED_BY_POLICY",
+                          ).length
+                        }{" "}
+                        settled &middot;{" "}
+                        {
+                          filteredOrders.filter(
+                            (o) => o.status === "BLOCKED_BY_POLICY",
+                          ).length
+                        }{" "}
+                        blocked ($0)
+                      </span>
+                    </div>
+
+                    <div className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
                       {filteredOrders.slice(0, 5).map((order) => {
                         const isBlocked = order.status === "BLOCKED_BY_POLICY";
                         const isCompleted = order.status === "COMPLETED";
@@ -2313,35 +2070,32 @@ export function PayPalSentinelCockpit() {
                           <article
                             key={order.id}
                             data-testid={`order-card-${order.id}`}
-                            className="flex items-center justify-between gap-3 py-2.5 first:pt-0 last:pb-0"
+                            className="flex items-center justify-between gap-3 py-2.5"
                           >
                             <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className="truncate text-[13px] font-medium text-[var(--ink)]">
-                                  {order.item_title}
-                                </span>
+                              <div className="truncate text-[13px] font-medium text-[var(--ink)]">
+                                {order.item_title}
                               </div>
                               <div className="mt-0.5 flex items-center gap-1.5 text-[11.5px] text-[var(--muted)]">
                                 <span
                                   className={cn(
-                                    "shrink-0 rounded px-1.5 py-0.5 font-mono text-[10px] font-semibold",
+                                    "font-mono text-[10.5px] font-medium",
                                     isBlocked
-                                      ? "bg-amber-500/15 text-amber-700"
+                                      ? "text-amber-700"
                                       : isCompleted
-                                        ? "bg-[var(--ok)]/12 text-[var(--ok)]"
-                                        : "bg-sky-500/12 text-sky-700",
+                                        ? "text-[var(--ok)]"
+                                        : "text-sky-700",
                                   )}
                                 >
                                   {isBlocked
-                                    ? "NOISE BLOCKED"
+                                    ? "Blocked ($0)"
                                     : isCompleted
-                                      ? "SETTLED"
-                                      : "ESCROW"}
+                                      ? "Settled"
+                                      : "Escrow"}
                                 </span>
+                                <span>&middot;</span>
                                 <span className="truncate">
-                                  {isBlocked
-                                    ? `Risk ${order.risk_score}/100 > 35 limit · $0.00 charged`
-                                    : `${order.merchant_name} · ${order.id}`}
+                                  {order.merchant_name}
                                 </span>
                               </div>
                             </div>
@@ -2369,134 +2123,145 @@ export function PayPalSentinelCockpit() {
                         );
                       })}
                     </div>
-                  </MdxcnFrame>
 
-                  {/* Clean @paypal/mcp Tool Inspector */}
-                  <div data-testid="mcp-tool-inspector" className="flex min-w-0 flex-1 flex-col">
-                    <MdxcnFrame
-                      title="3. @paypal/mcp Tool Inspector"
-                      subtitle={`${mcpTools.length} tools · Patches #95 #98 #107 #109 #119`}
-                      className="min-w-0 flex-1"
-                    >
-                      <div className="flex min-w-0 flex-1 flex-col justify-between gap-2">
-                        <div className="flex min-w-0 gap-2">
-                          <select
-                            data-testid="mcp-tool-select"
-                            value={selectedMcpTool}
-                            onChange={(e) => {
-                              const nextName = e.target.value;
-                              setSelectedMcpTool(nextName);
-                              const desc = mcpTools.find(
-                                (t) => t.name === nextName,
-                              );
-                              if (desc) {
-                                const nextArgsStr = JSON.stringify(
-                                  desc.sample_arguments,
-                                  null,
-                                  2,
-                                );
-                                setMcpArgsText(nextArgsStr);
-                                setMcpOutputText(
-                                  JSON.stringify(
-                                    {
-                                      tool: desc.name,
-                                      category: desc.category,
-                                      arguments: desc.sample_arguments,
-                                    },
-                                    null,
-                                    2,
-                                  ),
-                                );
-                              }
-                            }}
-                            aria-label="Select MCP Tool"
-                            className="min-h-9 min-w-0 flex-1 truncate rounded-lg border border-[var(--line)] bg-[var(--soft)] px-2.5 font-mono text-[11.5px] text-[var(--ink)]"
-                          >
-                            {mcpTools.map((tool) => (
-                              <option key={tool.name} value={tool.name}>
-                                {tool.name} ({tool.category.replace("Headless ", "")})
-                              </option>
-                            ))}
-                          </select>
-
-                          <button
-                            type="button"
-                            data-testid="mcp-invoke-btn"
-                            disabled={busy}
-                            onClick={() => void handleInvokeMcpTool()}
-                            className="found-sbtn-go text-xs"
-                          >
-                            <Play className="h-3.5 w-3.5" />
-                            Invoke
-                          </button>
-                        </div>
-
-                        {/* Upstream Patch & Safety Hints Strip (Upgrade B) */}
-                        {(() => {
-                          const currentTool = mcpTools.find(
-                            (t) => t.name === selectedMcpTool,
-                          );
-                          const isDestructive =
-                            currentTool?.rust_guardrail_enforced ?? true;
-                          const patchTag =
-                            selectedMcpTool === "sentinel_dispute_evidence_shield"
-                              ? "Patches #109 #118 (provide_evidence)"
-                              : selectedMcpTool === "sentinel_batch_payout"
-                                ? "Patches #107 (Payouts v1)"
-                                : selectedMcpTool === "sentinel_http402_paywall"
-                                  ? "CrawlerPal 1st-Place Pattern"
-                                  : selectedMcpTool === "create_order" ||
-                                      selectedMcpTool === "sentinel_direct_card_capture"
-                                    ? "Patches #95 #98 (UUID & Cap)"
-                                    : "Anthropic/OpenAI MCP Spec";
-                          return (
-                            <div className="flex flex-wrap items-center gap-1.5 py-0.5 text-[10.5px]">
-                              <span
-                                className={`rounded px-1.5 py-0.5 font-mono font-medium ${
-                                  isDestructive
-                                    ? "bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                                    : "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                                }`}
-                              >
-                                {isDestructive
-                                  ? "DESTRUCTIVE · GUARDED"
-                                  : "READ ONLY AUDIT"}
-                              </span>
-                              <span className="rounded bg-[var(--soft)] px-1.5 py-0.5 font-mono text-[var(--muted)]">
-                                IDEMPOTENT UUID
-                              </span>
-                              <span className="rounded bg-sky-500/10 px-1.5 py-0.5 font-mono font-medium text-sky-700 dark:text-sky-400">
-                                {patchTag}
-                              </span>
-                            </div>
-                          );
-                        })()}
-
-                        <input
-                          type="hidden"
-                          data-testid="mcp-args-textarea"
-                          value={mcpArgsText}
-                          readOnly
-                        />
-
-                        <pre
-                          data-testid="mcp-output-pre"
-                          className="flex-1 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-[var(--line)] bg-[var(--soft)] px-2.5 py-2 font-mono text-[11px] leading-tight text-[var(--ok)]"
-                        >
-                          {mcpOutputText}
-                        </pre>
-                      </div>
-                    </MdxcnFrame>
+                    <div className="mt-3 flex items-center justify-between border-t border-[var(--line)] pt-3 text-[12px]">
+                      <button
+                        type="button"
+                        className="found-tlink cursor-pointer"
+                        onClick={() => {
+                          setVariant("ledger");
+                          setActiveRoute("ledger");
+                        }}
+                      >
+                        Full AG Grid Ledger &rarr;
+                      </button>
+                      <button
+                        type="button"
+                        className="found-tlink cursor-pointer"
+                        onClick={() => {
+                          setVariant("timeline");
+                          setActiveRoute("timeline");
+                        }}
+                      >
+                        Milestone Scheduler &rarr;
+                      </button>
+                    </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              </div>
+            ) : null}
 
-            {/* Sponsor Status Strip */}
-            <SponsorStatusStrip
-              status={integrationStatus}
-              sdkToolCount={sdkToolCount}
-            />
-            </div>
+            {/* TAB 3: DEDICATED 12 PATTERNS STUDIO */}
+            {homeTab === "patterns" ? (
+              <div style={{ maxWidth: 880, margin: "0 auto" }}>
+                <FoundInspirationStudio
+                  apiBase={RUST_API_BASE}
+                  onPatternSettled={handlePatternSettled}
+                  onOpenReceipt={handleOpenReceiptFromAnywhere}
+                />
+              </div>
+            ) : null}
+
+            {/* TAB 4: DEDICATED DEVELOPER MCP INSPECTOR & PROOF */}
+            {homeTab === "mcp" ? (
+              <div
+                style={{ maxWidth: 880, margin: "0 auto" }}
+                className="space-y-6"
+              >
+                <div
+                  data-testid="mcp-tool-inspector"
+                  className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5"
+                >
+                  <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
+                    <div>
+                      <h3 className="text-[15px] font-semibold text-[var(--ink)]">
+                        @paypal/mcp Tool Inspector
+                      </h3>
+                      <p className="text-[12.5px] text-[var(--muted)]">
+                        {mcpTools.length} tools guarded by per-call UUID v4 idempotency and Rust spend policies.
+                      </p>
+                    </div>
+                    <span className="font-mono text-[11px] text-[var(--muted)]">
+                      Patches #95 #98 #107 #109 #119
+                    </span>
+                  </div>
+
+                  <div className="flex min-w-0 gap-2 mb-3">
+                    <select
+                      data-testid="mcp-tool-select"
+                      value={selectedMcpTool}
+                      onChange={(e) => {
+                        const nextName = e.target.value;
+                        setSelectedMcpTool(nextName);
+                        const desc = mcpTools.find((t) => t.name === nextName);
+                        if (desc) {
+                          const nextArgsStr = JSON.stringify(
+                            desc.sample_arguments,
+                            null,
+                            2,
+                          );
+                          setMcpArgsText(nextArgsStr);
+                          setMcpOutputText(
+                            JSON.stringify(
+                              {
+                                tool: desc.name,
+                                category: desc.category,
+                                arguments: desc.sample_arguments,
+                              },
+                              null,
+                              2,
+                            ),
+                          );
+                        }
+                      }}
+                      aria-label="Select MCP Tool"
+                      className="min-h-9 min-w-0 flex-1 truncate rounded-lg border border-[var(--line)] bg-[var(--soft)] px-2.5 font-mono text-[12px] text-[var(--ink)]"
+                    >
+                      {mcpTools.map((tool) => (
+                        <option key={tool.name} value={tool.name}>
+                          {tool.name} ({tool.category.replace("Headless ", "")})
+                        </option>
+                      ))}
+                    </select>
+
+                    <button
+                      type="button"
+                      data-testid="mcp-invoke-btn"
+                      disabled={busy}
+                      onClick={() => void handleInvokeMcpTool()}
+                      className="found-sbtn-go text-xs"
+                    >
+                      <Play className="h-3.5 w-3.5" />
+                      Invoke
+                    </button>
+                  </div>
+
+                  <input
+                    type="hidden"
+                    data-testid="mcp-args-textarea"
+                    value={mcpArgsText}
+                    readOnly
+                  />
+
+                  <pre
+                    data-testid="mcp-output-pre"
+                    className="max-h-56 overflow-y-auto whitespace-pre-wrap break-words rounded-xl border border-[var(--line)] bg-[var(--soft)] p-3 font-mono text-[11px] leading-relaxed text-[var(--ink)]"
+                  >
+                    {mcpOutputText}
+                  </pre>
+                </div>
+
+                <SponsorStatusStrip
+                  status={integrationStatus}
+                  sdkToolCount={sdkToolCount}
+                />
+
+                <HackathonImpactStreakSection
+                  defaultHackathonId="paypal-ai-hackathon"
+                  heading="Project Impact & How I Build"
+                />
+              </div>
+            ) : null}
           </div>
         ) : null}
 
@@ -2616,20 +2381,13 @@ export function PayPalSentinelCockpit() {
             onSelectCatalogProduct={(item) => {
               setVariant("command");
               setActiveRoute("home");
+              setHomeTab("shop");
               void executeAgentIntent({
                 prompt: `Procure ${item.title} (${item.sku}) via PayPal Orders v2`,
                 sku: item.sku,
                 amount: item.price_usd,
               });
             }}
-          />
-        ) : null}
-
-        {/* Isolated BunUI Streak Grid: PayPal Sentinel Project Impact & How I Build (Home view) */}
-        {activeRoute === "home" ? (
-          <HackathonImpactStreakSection
-            defaultHackathonId="paypal-ai-hackathon"
-            heading="Project Impact & How I Build"
           />
         ) : null}
       </main>
@@ -2705,6 +2463,9 @@ export function PayPalSentinelCockpit() {
       <FoundUndoToast
         message={toastMessage}
         onUndo={toastUndoFn}
+        suppressed={Boolean(
+          sheetDocId || activeReplyDraft || paletteOpen || feedbackOpen,
+        )}
         onDismiss={() => {
           setToastMessage(null);
           setToastUndoFn(undefined);

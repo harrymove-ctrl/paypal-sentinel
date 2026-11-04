@@ -1,18 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { FoundBrandIcon } from "./found-brand-mark";
-import {
-  BenchoSloshSlider,
-  BenchoTiltCard,
-  DitherButton,
-  DitherCard,
-  MdxcnEndpoint,
-  MdxcnFrame,
-  MdxcnInvoice,
-  MdxcnTimeline,
-  MdxcnWaterfall,
-} from "./tactile-cards";
 import type { PayPalReceiptBreakdown } from "./found-overlays";
 import type { PayPalOrderRecord } from "./types";
 
@@ -551,12 +539,27 @@ const FALLBACK_PATTERNS: InspirationPatternDescriptor[] = [
 ];
 
 const TRACK_TABS = [
-  { id: "ai_agents", label: "1. AI Agents & A2A" },
-  { id: "money_movement", label: "2. Money Movement" },
-  { id: "business_solutions", label: "3. Business Solutions" },
-  { id: "consumer_experiences", label: "4. Consumer" },
-  { id: "social_impact", label: "5. Social Impact" },
+  { id: "ai_agents", label: "AI Agents" },
+  { id: "money_movement", label: "Money Movement" },
+  { id: "business_solutions", label: "Business" },
+  { id: "consumer_experiences", label: "Consumer" },
+  { id: "social_impact", label: "Social Impact" },
 ] as const;
+
+const SHORT_PATTERN_TITLES: Record<string, string> = {
+  a2a_negotiate_settle: "A2A Negotiation",
+  auto_contractor_payout: "Contractor Auto-Pay",
+  http402_crawler_paywall: "HTTP 402 Paywall",
+  receipt_bill_split: "Dinner Bill Split",
+  phone_instant_send: "Phone Instant Pay",
+  oss_pr_bounty_payout: "OSS PR Bounty",
+  multi_currency_invoice: "Multi-FX Invoice",
+  marketplace_split_checkout: "Marketplace Split",
+  dispute_evidence_shield: "Dispute Shield",
+  consumer_budget_categorizer: "Sub & Budget Shield",
+  chat_request_money: "Chat Money Request",
+  social_impact_multi_cause: "Solar & Cause Split",
+};
 
 interface FoundInspirationStudioProps {
   apiBase: string;
@@ -580,7 +583,6 @@ export function FoundInspirationStudio({
     "a2a_negotiate_settle",
   );
   const [customAmount, setCustomAmount] = useState<string>("265");
-  const [customNote, setCustomNote] = useState<string>("");
   const [executing, setExecuting] = useState<boolean>(false);
   const [runningAll, setRunningAll] = useState<boolean>(false);
   const [lastResult, setLastResult] = useState<ExecutePatternResponse | null>(
@@ -589,7 +591,6 @@ export function FoundInspirationStudio({
   const [allPatternResults, setAllPatternResults] = useState<
     ExecutePatternResponse[]
   >([]);
-  const [showRawJson, setShowRawJson] = useState<boolean>(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
   useEffect(() => {
@@ -597,7 +598,12 @@ export function FoundInspirationStudio({
     fetch(`${apiBase}/api/patterns/catalog`, { cache: "no-store" })
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
-        if (!cancelled && data && Array.isArray(data.patterns) && data.patterns.length > 0) {
+        if (
+          !cancelled &&
+          data &&
+          Array.isArray(data.patterns) &&
+          data.patterns.length > 0
+        ) {
           setPatterns(data.patterns);
         }
       })
@@ -653,7 +659,6 @@ export function FoundInspirationStudio({
           pattern_id: activePattern.id,
           custom_amount_usd: parsedAmount,
           custom_currency: activePattern.default_currency,
-          custom_note: customNote.trim() || undefined,
           idempotency_key: `pattern-${activePattern.id}-${Date.now()}`,
         }),
       });
@@ -665,10 +670,6 @@ export function FoundInspirationStudio({
       } else {
         const typed = data as ExecutePatternResponse;
         setLastResult(typed);
-        setAllPatternResults((prev) => {
-          const filtered = prev.filter((r) => r.pattern.id !== typed.pattern.id);
-          return [typed, ...filtered];
-        });
         onPatternSettled?.(typed);
       }
     } catch {
@@ -678,7 +679,7 @@ export function FoundInspirationStudio({
     } finally {
       setExecuting(false);
     }
-  }, [activePattern, apiBase, customAmount, customNote, onPatternSettled]);
+  }, [activePattern, apiBase, customAmount, onPatternSettled]);
 
   const handleRunAll12Patterns = useCallback(async () => {
     if (runningAll || executing) return;
@@ -688,7 +689,6 @@ export function FoundInspirationStudio({
 
     try {
       for (const pat of patterns) {
-        // Use a compact amount ($50) when sweeping all 12 patterns so all 12 fit comfortably inside the $2,500 daily cap
         const sweepAmount = Math.min(pat.default_amount_usd, 120);
         const res = await fetch(`${apiBase}/api/patterns/execute`, {
           method: "POST",
@@ -723,84 +723,10 @@ export function FoundInspirationStudio({
   }, [apiBase, executing, onPatternSettled, patterns, runningAll]);
 
   const parsedCustomAmount =
-    Number.parseFloat(customAmount) || (activePattern ? activePattern.default_amount_usd : 265);
+    Number.parseFloat(customAmount) ||
+    (activePattern ? activePattern.default_amount_usd : 265);
 
-  const asciiFigure = useMemo(() => {
-    if (!activePattern) return "";
-    const barWidth = 20;
-    const splitRows = activePattern.sample_breakdown.map((row) => {
-      const rawAmt =
-        Number.parseFloat(row.amount_display.replace(/[^0-9.]/g, "")) || 40;
-      const pct = Math.min(
-        100,
-        Math.max(
-          5,
-          (rawAmt / (activePattern.default_amount_usd || 100)) * 100,
-        ),
-      );
-      const filled = Math.round((pct / 100) * barWidth);
-      const empty = Math.max(0, barWidth - filled);
-      const bar = "█".repeat(filled) + "░".repeat(empty);
-      const label = row.label.slice(0, 24).padEnd(24, " ");
-      return `|  ${label} [${bar}] ${pct.toFixed(0).padStart(3, " ")}% ${row.amount_display.padStart(8, " ")}  |`;
-    });
-
-    const steps = (
-      lastResult
-        ? lastResult.execution_steps
-        : [
-            "Rust spend guardrail pre-check (< $500 single order cap)",
-            "TypeSafe Jev rubric (risk score <= 35 PASS)",
-            `PayPal Orders v2 / ${activePattern.mcp_tool} dispatch`,
-            "Idempotent commit to AG Studio ledger and sponsor state",
-          ]
-    ).map(
-      (s, i) => `|  ● 0${i + 1} ${s.slice(0, 60).padEnd(60, " ")}  |`,
-    );
-
-    return [
-      "+--------------------------------------------------------------------------------+",
-      `|  PAYPAL AI PATTERN: ${activePattern.title.slice(0, 56).padEnd(56, " ")} |`,
-      `|  Track: ${activePattern.track_title.padEnd(26, " ")} | Tool: ${activePattern.mcp_tool.padEnd(28, " ")} |`,
-      `|  Settlement Amount: $${parsedCustomAmount.toFixed(2).padEnd(10, " ")} | Status: ${(lastResult ? `SETTLED (${lastResult.order.id})` : "READY FOR 1-CLICK DISPATCH").padEnd(34, " ")} |`,
-      "+--------------------------------------------------------------------------------+",
-      "|  SPLIT WATERFALL & LEDGER ALLOCATION:                                          |",
-      ...splitRows,
-      "+--------------------------------------------------------------------------------+",
-      "|  EXECUTION TIMELINE & REASONING TRACE:                                         |",
-      ...steps,
-      "+--------------------------------------------------------------------------------+",
-    ].join("\n");
-  }, [activePattern, parsedCustomAmount, lastResult]);
-
-  const waterfallItems = useMemo(() => {
-    if (!activePattern) return [];
-    const total = parsedCustomAmount;
-    return activePattern.sample_breakdown.map((row) => {
-      const rawAmt =
-        Number.parseFloat(row.amount_display.replace(/[^0-9.]/g, "")) ||
-        total / activePattern.sample_breakdown.length;
-      const ratio =
-        activePattern.default_amount_usd > 0
-          ? total / activePattern.default_amount_usd
-          : 1;
-      const scaledAmt = rawAmt * ratio;
-      return {
-        label: row.label,
-        party: row.party,
-        amount: scaledAmt,
-        total: total,
-        tone:
-          row.status === "Settled" ||
-          row.status === "Paid" ||
-          row.status === "Released"
-            ? ("ok" as const)
-            : ("accent" as const),
-      };
-    });
-  }, [activePattern, parsedCustomAmount]);
-
-  const invoiceRows = useMemo(() => {
+  const scaledRows = useMemo(() => {
     if (!activePattern) return [];
     const ratio =
       activePattern.default_amount_usd > 0
@@ -809,12 +735,11 @@ export function FoundInspirationStudio({
     return activePattern.sample_breakdown.map((row) => {
       const rawAmt =
         Number.parseFloat(row.amount_display.replace(/[^0-9.]/g, "")) || 40;
-      const scaledAmt = rawAmt * ratio;
       return {
         label: row.label,
-        detail: `${row.party} · ${row.share_or_meta}`,
-        amountDisplay: `$${scaledAmt.toFixed(2)}`,
-        badge: row.status,
+        party: row.party,
+        scaledAmount: `$${(rawAmt * ratio).toFixed(2)}`,
+        status: row.status,
       };
     });
   }, [activePattern, parsedCustomAmount]);
@@ -822,15 +747,19 @@ export function FoundInspirationStudio({
   if (!activePattern) return null;
 
   return (
-    <section
-      data-testid="paypal-inspiration-studio"
-      className="mb-6"
-    >
-      <MdxcnFrame
-        title="PayPal + AI Pattern Studio"
-        subtitle="5 Official Devpost Tracks"
-        ascii={asciiFigure}
-        headerAction={
+    <section data-testid="paypal-inspiration-studio" className="mb-6">
+      <div className="rounded-2xl border border-[var(--line)] bg-[var(--surface)] p-5 sm:p-6">
+        {/* Clean Header Row + 5 Track Tabs */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-[var(--line)]">
+          <div>
+            <h3 className="text-[16px] font-semibold tracking-tight text-[var(--ink)]">
+              12 PayPal + AI Patterns
+            </h3>
+            <p className="text-[12.5px] text-[var(--muted)]">
+              Select a track and run real sandbox settlements with verifiable receipts.
+            </p>
+          </div>
+
           <div
             className="found-ctxsw flex-wrap"
             role="tablist"
@@ -850,26 +779,27 @@ export function FoundInspirationStudio({
               </button>
             ))}
           </div>
-        }
-      >
-        {/* Clean Segmented Pattern Selector (Zero Heavy Box Outlines) */}
-        <div className="mb-4 flex flex-wrap items-center gap-1.5 rounded-xl bg-[var(--soft)] p-1">
+        </div>
+
+        {/* Crisp 2-to-3-Word Pattern Pills (Zero Multi-Line Wrapping) */}
+        <div className="mt-4 mb-5 flex flex-wrap items-center gap-1.5">
           {trackPatterns.map((pat) => {
             const isSelected = pat.id === activePattern.id;
+            const shortLabel = SHORT_PATTERN_TITLES[pat.id] || pat.title;
             return (
               <button
                 key={pat.id}
                 type="button"
                 data-testid={`inspiration-pattern-${pat.id}`}
                 onClick={() => handleSelectPattern(pat)}
-                className={`rounded-lg px-3 py-1.5 text-left text-[12px] transition-all cursor-pointer ${
+                className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12.5px] transition cursor-pointer ${
                   isSelected
-                    ? "bg-[var(--surface)] font-medium text-[var(--ink)] shadow-[0_1px_2px_rgba(24,24,27,0.06)]"
-                    : "text-[var(--muted)] hover:text-[var(--ink)]"
+                    ? "bg-[var(--ink)] font-medium text-[var(--bg)]"
+                    : "bg-[var(--soft)] text-[var(--muted)] hover:text-[var(--ink)]"
                 }`}
               >
-                <span>{pat.title}</span>
-                <span className="ml-2 font-mono text-[11px] tabular-nums opacity-70">
+                <span>{shortLabel}</span>
+                <span className="font-mono text-[11px] opacity-75">
                   ${pat.default_amount_usd}
                 </span>
               </button>
@@ -877,78 +807,120 @@ export function FoundInspirationStudio({
           })}
         </div>
 
-        {/* Clean 2-Column Split Separated by 1px Vertical Divider (Zero Nested Box-in-Box) */}
+        {/* Clean 2-Column Split */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-          {/* Left Column: Active Pattern Info & Split Waterfall */}
-          <div className="flex flex-col justify-between lg:col-span-7 lg:border-r lg:border-[var(--line)] lg:pr-6">
-            <div>
-              <div className="flex items-center justify-between gap-2 text-[11.5px]">
-                <span className="font-medium text-[var(--accent)]">
-                  {activePattern.track_title}
-                </span>
-                <span className="font-mono text-[11px] text-[var(--muted)]">
-                  @paypal/mcp · {activePattern.mcp_tool}
-                </span>
-              </div>
-
-              <h4 className="mt-1 text-[15px] font-semibold tracking-tight text-[var(--ink)]">
-                {activePattern.title}
-              </h4>
-              <p className="mt-1 text-[13px] leading-relaxed text-[var(--muted)]">
-                {activePattern.subtitle}
-              </p>
+          {/* Left: Pattern Summary & Clean Hairline Split */}
+          <div className="lg:col-span-7 lg:border-r lg:border-[var(--line)] lg:pr-6">
+            <div className="flex items-center justify-between gap-2 text-[11.5px] text-[var(--muted)]">
+              <span>{activePattern.track_title}</span>
+              <span className="font-mono">{activePattern.mcp_tool}</span>
             </div>
 
-            <div className="mt-4 border-t border-[var(--line)] pt-3">
-              <MdxcnWaterfall items={waterfallItems} />
+            <h4 className="mt-1 text-[15.5px] font-semibold tracking-tight text-[var(--ink)]">
+              {activePattern.title}
+            </h4>
+            <p className="mt-1 text-[13px] leading-relaxed text-[var(--muted)]">
+              {activePattern.subtitle}
+            </p>
+
+            <div className="mt-4 divide-y divide-[var(--line)] border-t border-[var(--line)]">
+              {scaledRows.map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-center justify-between gap-3 py-2.5 text-[12.5px]"
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate font-medium text-[var(--ink)]">
+                      {row.label}
+                    </div>
+                    <div className="truncate text-[11.5px] text-[var(--muted)]">
+                      {row.party}
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-2.5">
+                    <span className="text-[11px] text-[var(--muted)]">
+                      {row.status}
+                    </span>
+                    <span className="font-mono font-semibold text-[var(--ink)]">
+                      {row.scaledAmount}
+                    </span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
-          {/* Right Column: Clean Tenor-Style Amount Slider & 1-Click Settlement */}
-          <div className="flex flex-col justify-between lg:col-span-5">
+          {/* Right: Clean Amount Control, Primary CTA & Consolidated Receipt Strip */}
+          <div className="flex flex-col justify-between gap-4 lg:col-span-5">
             <div className="space-y-4">
-              <BenchoSloshSlider
-                min={25}
-                max={500}
-                step={5}
-                value={parsedCustomAmount}
-                onChange={(val) => setCustomAmount(String(val))}
-                label="Settlement Amount"
-                unit="$"
-                viscosity={15}
-                momentum={55}
-                corner={14}
-                tilt={35}
-                presets={[50, 100, 240, 265, 450]}
-              />
+              <div>
+                <div className="flex items-baseline justify-between mb-2">
+                  <span className="text-[12.5px] text-[var(--muted)]">
+                    Settlement amount
+                  </span>
+                  <span className="font-mono text-[18px] font-semibold text-[var(--ink)]">
+                    ${parsedCustomAmount.toFixed(0)}{" "}
+                    <span className="text-[12px] font-normal text-[var(--muted)]">
+                      {activePattern.default_currency}
+                    </span>
+                  </span>
+                </div>
 
-              <input
-                type="hidden"
-                data-testid="pattern-amount-input"
-                value={customAmount}
-                readOnly
-              />
+                <input
+                  type="range"
+                  min={25}
+                  max={500}
+                  step={5}
+                  value={parsedCustomAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  aria-label="Settlement amount"
+                  className="w-full accent-[var(--ink)] cursor-pointer"
+                />
+
+                <input
+                  type="hidden"
+                  data-testid="pattern-amount-input"
+                  value={customAmount}
+                  readOnly
+                />
+
+                <div className="mt-2 flex items-center gap-1.5">
+                  {[50, 120, 265, 450].map((preset) => (
+                    <button
+                      key={preset}
+                      type="button"
+                      onClick={() => setCustomAmount(String(preset))}
+                      className={`rounded-full px-2.5 py-0.5 font-mono text-[11px] transition cursor-pointer ${
+                        parsedCustomAmount === preset
+                          ? "bg-[var(--ink)] text-[var(--bg)]"
+                          : "bg-[var(--soft)] text-[var(--muted)] hover:text-[var(--ink)]"
+                      }`}
+                    >
+                      ${preset}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
               <div className="flex gap-2">
-                <DitherButton
-                  variant="primary"
+                <button
+                  type="button"
                   data-testid="execute-pattern-btn"
                   disabled={executing || runningAll}
                   onClick={handleExecutePattern}
-                  className="flex-1 py-2.5 text-[12.5px]"
+                  className="found-sbtn-go flex-1 justify-center py-2.5 text-[12.5px]"
                 >
                   {executing
-                    ? "Executing PayPal Sandbox..."
-                    : `Settle $${parsedCustomAmount.toFixed(0)} via PayPal Sandbox ->`}
-                </DitherButton>
+                    ? "Settling..."
+                    : `Settle $${parsedCustomAmount.toFixed(0)}`}
+                </button>
 
                 <button
                   type="button"
                   data-testid="run-all-12-patterns-btn"
                   disabled={runningAll || executing}
                   onClick={handleRunAll12Patterns}
-                  className="rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-[12px] font-medium text-[var(--ink)] shadow-sm hover:bg-[var(--soft)] disabled:opacity-50 cursor-pointer"
-                  title="Sequentially execute all 12 patterns and generate verifiable receipts"
+                  className="rounded-full border border-[var(--line)] bg-[var(--surface)] px-3.5 py-2 text-[12px] font-medium text-[var(--ink)] hover:bg-[var(--soft)] disabled:opacity-50 cursor-pointer"
                 >
                   {runningAll ? "Running 12..." : "Run All 12"}
                 </button>
@@ -964,183 +936,91 @@ export function FoundInspirationStudio({
               ) : null}
             </div>
 
-            <div className="mt-4 border-t border-[var(--line)] pt-2.5">
-              {lastResult ? (
+            {/* Single Clean Receipt Strip (Replaces Duplicate Status + 3-Col Box) */}
+            <div className="border-t border-[var(--line)] pt-3">
+              {lastResult?.receipt ? (
                 <div
-                  data-testid="pattern-execution-steps"
-                  className="flex flex-col gap-1.5 font-mono text-[11.5px]"
+                  data-testid="pattern-receipt-card"
+                  className="space-y-1 text-[12px]"
                 >
                   <div className="flex items-center justify-between gap-2">
-                    <span className="font-semibold text-[var(--ok)]">
-                      SETTLED · {lastResult.order.id}
+                    <span className="font-mono font-semibold text-[var(--ok)]">
+                      ✓ {lastResult.receipt.receipt_id}
                     </span>
-                    <span className="font-semibold text-[var(--ink)]">
-                      ${lastResult.order.amount_usd.toFixed(2)} {lastResult.order.currency}
+                    <button
+                      type="button"
+                      className="found-tlink cursor-pointer text-[11.5px]"
+                      onClick={() =>
+                        onOpenReceipt?.(
+                          lastResult.order.id,
+                          lastResult.receipt,
+                          lastResult.order,
+                        )
+                      }
+                    >
+                      Inspect Receipt &rarr;
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-between gap-2 font-mono text-[11px] text-[var(--muted)]">
+                    <span>Gross ${lastResult.receipt.gross_amount_usd.toFixed(2)}</span>
+                    <span className="text-[var(--ink)]">
+                      Net Received: ${lastResult.receipt.net_amount_usd.toFixed(2)}{" "}
+                      {lastResult.receipt.currency}
                     </span>
                   </div>
-                  {lastResult.receipt && (
-                    <div className="flex items-center justify-between gap-2 text-[11px] text-[var(--muted)]">
-                      <span>{lastResult.receipt.receipt_id}</span>
-                      <button
-                        type="button"
-                        className="found-tlink cursor-pointer text-[11px]"
-                        onClick={() =>
-                          onOpenReceipt?.(
-                            lastResult.order.id,
-                            lastResult.receipt,
-                            lastResult.order,
-                          )
-                        }
-                      >
-                        Inspect Full Receipt &amp; JSON &rarr;
-                      </button>
-                    </div>
-                  )}
                 </div>
               ) : (
-                <div className="flex items-center justify-between gap-2 text-[11.5px] text-[var(--muted)]">
-                  <span>
-                    Guardrail: <b className="text-[var(--ink)]">&le; $500</b> &middot;{" "}
-                    <b className="text-[var(--ink)]">Risk &le; 35</b>
-                  </span>
-                  <span className="font-mono text-[10.5px] text-[var(--accent)]">
-                    Orders v2 + MCP
-                  </span>
+                <div className="flex items-center justify-between text-[11.5px] text-[var(--muted)]">
+                  <span>Cap &le; $500/order &middot; Risk &le; 35</span>
+                  <span className="font-mono">PayPal Sandbox</span>
                 </div>
               )}
             </div>
           </div>
         </div>
 
-        {/* Live Verifiable Pattern Receipt Dossier Card */}
-        {lastResult?.receipt && (
+        {/* Compact Scrollable 12/12 Receipts Matrix (Shown Only After Run All 12) */}
+        {allPatternResults.length >= 2 && (
           <div
-            data-testid="pattern-receipt-card"
-            className="mt-5 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3.5 text-[12px]"
+            data-testid="all-12-patterns-results-table"
+            className="mt-5 border-t border-[var(--line)] pt-4 text-[12px]"
           >
-            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[var(--line)] pb-2.5">
-              <div className="flex items-center gap-2">
-                <span className="font-mono font-semibold text-[var(--ok)]">
-                  {lastResult.receipt.receipt_id}
-                </span>
-                <span className="rounded bg-[var(--soft)] px-1.5 py-0.5 font-mono text-[10.5px] text-[var(--muted)]">
-                  {lastResult.receipt.paypal_order_id}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] text-[var(--muted)]">
-                  UUID: {lastResult.receipt.paypal_request_id_uuid.slice(0, 18)}...
-                </span>
-                <button
-                  type="button"
-                  className="found-tlink cursor-pointer"
-                  onClick={() =>
-                    onOpenReceipt?.(
-                      lastResult.order.id,
-                      lastResult.receipt,
-                      lastResult.order,
-                    )
-                  }
-                >
-                  Open in Receipt &amp; Shield Modal
-                </button>
-              </div>
-            </div>
-
-            <div className="mt-2.5 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
-              <div>
-                <span className="text-[11px] text-[var(--muted)]">Gross Settled:</span>
-                <div className="font-mono font-semibold text-[var(--ink)]">
-                  ${lastResult.receipt.gross_amount_usd.toFixed(2)}{" "}
-                  {lastResult.receipt.currency}
-                </div>
-              </div>
-              <div>
-                <span className="text-[11px] text-[var(--muted)]">
-                  PayPal Fee (2.9% + $0.30):
-                </span>
-                <div className="font-mono text-[var(--muted)]">
-                  ${lastResult.receipt.fee_usd.toFixed(2)}{" "}
-                  {lastResult.receipt.currency}
-                </div>
-              </div>
-              <div>
-                <span className="text-[11px] text-[var(--muted)]">Net Received:</span>
-                <div className="font-mono font-semibold text-[var(--ok)]">
-                  ${lastResult.receipt.net_amount_usd.toFixed(2)}{" "}
-                  {lastResult.receipt.currency}
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-2.5 flex items-center justify-between gap-2 border-t border-[var(--line)] pt-2 text-[11px]">
-              <span className="font-mono text-[var(--muted)] truncate">
-                Endpoint: {lastResult.receipt.paypal_api_endpoint}
+            <div className="flex items-center justify-between pb-2">
+              <span className="font-semibold text-[var(--ink)]">
+                Batch Sweep ({allPatternResults.length} Verified)
               </span>
               <button
                 type="button"
-                className="found-tlink cursor-pointer shrink-0"
-                onClick={() => setShowRawJson((v) => !v)}
+                className="found-tlink text-[11.5px] cursor-pointer"
+                onClick={() => setAllPatternResults([])}
               >
-                {showRawJson ? "Hide Raw JSON" : "Show Raw PayPal JSON"}
+                Clear list
               </button>
             </div>
 
-            {showRawJson && (
-              <pre className="mt-2 max-h-36 overflow-y-auto rounded-lg bg-[var(--soft)] p-2 font-mono text-[10.5px] leading-relaxed text-[var(--ink)]">
-                {JSON.stringify(
-                  {
-                    request: lastResult.receipt.raw_paypal_request,
-                    response: lastResult.receipt.raw_paypal_response,
-                  },
-                  null,
-                  2,
-                )}
-              </pre>
-            )}
-          </div>
-        )}
-
-        {/* Live 12/12 Verified Pattern Receipts Matrix */}
-        {allPatternResults.length > 0 && (
-          <div
-            data-testid="all-12-patterns-results-table"
-            className="mt-5 rounded-xl border border-[var(--line)] bg-[var(--surface)] p-3 text-[12px]"
-          >
-            <div className="flex items-center justify-between border-b border-[var(--line)] pb-2">
-              <span className="font-semibold text-[var(--ink)]">
-                Live Pattern Receipts Matrix ({allPatternResults.length} Verified)
-              </span>
-              <span className="font-mono text-[11px] text-[var(--ok)]">
-                100% Verifiable Receipts &amp; UUIDs
-              </span>
-            </div>
-
-            <div className="mt-2 divide-y divide-[var(--line)] overflow-x-auto">
+            <div className="max-h-64 divide-y divide-[var(--line)] overflow-y-auto pr-1">
               {allPatternResults.map((item) => (
                 <div
                   key={item.pattern.id}
                   data-testid={`pattern-result-row-${item.pattern.id}`}
-                  className="flex items-center justify-between gap-3 py-2 text-[11.5px]"
+                  className="flex items-center justify-between gap-3 py-2 text-[12px]"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="font-medium text-[var(--ink)] truncate">
-                      {item.pattern.title}
-                    </div>
-                    <div className="font-mono text-[10.5px] text-[var(--muted)] truncate">
-                      {item.receipt?.receipt_id || "RCPT-PP-VERIFIED"} ·{" "}
-                      {item.order.id} · UUID:{" "}
-                      {item.receipt?.paypal_request_id_uuid.slice(0, 8)}...
-                    </div>
+                    <span className="font-medium text-[var(--ink)]">
+                      {SHORT_PATTERN_TITLES[item.pattern.id] || item.pattern.title}
+                    </span>
+                    <span className="ml-2 font-mono text-[11px] text-[var(--muted)]">
+                      {item.receipt?.receipt_id || item.order.id}
+                    </span>
                   </div>
 
                   <div className="flex shrink-0 items-center gap-3">
-                    <span className="font-mono font-semibold text-[var(--ok)]">
+                    <span className="font-mono font-medium text-[var(--ok)]">
                       ${item.order.amount_usd.toFixed(2)} {item.order.currency}
                     </span>
                     <button
                       type="button"
-                      className="found-tlink cursor-pointer text-[11px]"
+                      className="found-tlink cursor-pointer text-[11.5px]"
                       onClick={() =>
                         onOpenReceipt?.(
                           item.order.id,
@@ -1149,7 +1029,7 @@ export function FoundInspirationStudio({
                         )
                       }
                     >
-                      View Receipt &amp; JSON
+                      Receipt
                     </button>
                   </div>
                 </div>
@@ -1157,7 +1037,7 @@ export function FoundInspirationStudio({
             </div>
           </div>
         )}
-      </MdxcnFrame>
+      </div>
     </section>
   );
 }

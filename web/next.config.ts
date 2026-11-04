@@ -3,6 +3,7 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   devIndicators: false,
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   async rewrites() {
     const rustBackend =
       process.env.RUST_BACKEND_INTERNAL_URL || "http://127.0.0.1:4180";
